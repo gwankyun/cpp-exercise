@@ -26,6 +26,18 @@ target_sources(${main} PRIVATE
 )
 target_link_libraries(${main} PRIVATE spdlog::spdlog)
 
+find_package(hello-imgui CONFIG REQUIRED)
+
+find_package(nlohmann_json CONFIG REQUIRED)
+
+set(hello_imgui_example hello_imgui_example)
+add_executable(${hello_imgui_example})
+target_sources(${hello_imgui_example} PRIVATE
+  src/hello_imgui_example.cpp
+)
+target_link_libraries(${hello_imgui_example} PRIVATE nlohmann_json::nlohmann_json hello-imgui::hello_imgui)
+target_compile_features(${hello_imgui_example} PRIVATE cxx_std_20)
+
 # find_package(imgui CONFIG REQUIRED)
 # set(imgui_test imgui_test)
 # add_executable(${imgui_test})
