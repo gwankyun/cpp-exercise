@@ -19,12 +19,22 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ${source_dir}/lib)
 
 find_package(spdlog CONFIG REQUIRED)
 
+find_package(proxy CONFIG REQUIRED)
+
 set(main main)
 add_executable(${main})
 target_sources(${main} PRIVATE
   src/main.cpp
 )
-target_link_libraries(${main} PRIVATE spdlog::spdlog)
+target_link_libraries(${main} PRIVATE spdlog::spdlog msft_proxy)
+target_compile_features(${main} PRIVATE cxx_std_20)
+
+set(intrusive_container intrusive_container)
+add_executable(${intrusive_container})
+target_sources(${intrusive_container} PRIVATE
+  src/intrusive_container.cpp
+)
+target_link_libraries(${intrusive_container} PRIVATE spdlog::spdlog)
 
 find_package(hello-imgui CONFIG REQUIRED)
 
