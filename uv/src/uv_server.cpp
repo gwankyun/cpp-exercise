@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "uv.h"
+#include <uv.h>
 #include <boost/scope/defer.hpp>
 #include <spdlog/spdlog.h>
 
@@ -39,6 +39,7 @@ void on_write(uv_write_t* _req, int _status)
     {
         SPDLOG_ERROR("write error: {}", uv_strerror(_status));
     }
+    uv_close((uv_handle_t*)_req->handle, on_close);
 }
 
 void on_read(uv_stream_t* _stream, ssize_t _nread, const uv_buf_t* _buf)
@@ -81,6 +82,7 @@ void on_connection(uv_stream_t* _server, int _status)
     if (_status < 0)
     {
         SPDLOG_ERROR("connection error: {}", uv_strerror(_status));
+        uv_close((uv_handle_t*)_server, on_close);
         return;
     }
 
@@ -97,16 +99,24 @@ void on_connection(uv_stream_t* _server, int _status)
     }
 }
 
-int main()
+int main(int _argc, char* _argv[])
 {
     std::string log_format{"[%C-%m-%d %T.%e] [%^%L%$] [%-10!!:%4#] %v"};
     spdlog::set_pattern(log_format);
+
+    auto port = 12345;
+
+    if (_argc >= 2)
+    {
+        SPDLOG_INFO("_argv[0]: {}", _argv[1]);
+        port = std::stoi(_argv[1]);
+    }
 
     uv_tcp_t server;
     uv_tcp_init(uv_default_loop(), &server);
 
     struct sockaddr_in addr;
-    uv_ip4_addr("0.0.0.0", 12345, &addr);
+    uv_ip4_addr("0.0.0.0", port, &addr);
 
     uv_tcp_bind(&server, (const struct sockaddr*)&addr, 0);
     int r = uv_listen((uv_stream_t*)&server, 128, on_connection);
@@ -116,7 +126,7 @@ int main()
         return 1;
     }
 
-    SPDLOG_INFO("Listening on port 12345...");
+    SPDLOG_INFO("Listening on port {}...", port);
     uv_run(uv_default_loop(), UV_RUN_DEFAULT);
 
     return 0;

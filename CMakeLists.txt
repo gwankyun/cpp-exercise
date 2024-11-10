@@ -19,14 +19,18 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ${source_dir}/lib)
 
 find_package(spdlog CONFIG REQUIRED)
 
+find_package(boost_scope REQUIRED CONFIG)
+
 find_package(proxy CONFIG)
+
+find_package(Catch2 CONFIG REQUIRED)
 
 set(main main)
 add_executable(${main})
 target_sources(${main} PRIVATE
   src/main.cpp
 )
-target_link_libraries(${main} PRIVATE spdlog::spdlog)
+target_link_libraries(${main} PRIVATE spdlog::spdlog Boost::scope Catch2::Catch2)
 target_compile_features(${main} PRIVATE cxx_std_20)
 
 set(intrusive_container intrusive_container)
@@ -64,32 +68,5 @@ if(TARGET msft_proxy)
 endif()
 
 find_package(libuv CONFIG REQUIRED)
-find_package(boost_scope REQUIRED CONFIG)
 
-set(uv_common uv_common)
-add_library(${uv_common} INTERFACE)
-target_link_libraries(${uv_common} INTERFACE
-  spdlog::spdlog libuv::uv Boost::scope
-)
-target_include_directories(${uv_common} INTERFACE include)
-
-set(uv uv)
-
-set(uv_server uv_server)
-add_executable(${uv_server})
-target_sources(${uv_server} PRIVATE
-  src/uv_server.cpp
-)
-target_link_libraries(${uv_server} PRIVATE ${uv_common})
-target_compile_features(${uv_server} PRIVATE cxx_std_20)
-set_target_properties(${uv_server} PROPERTIES FOLDER ${uv})
-# set_target_properties(${uv_common} PROPERTIES FOLDER uv)
-
-set(uv_client uv_client)
-add_executable(${uv_client})
-target_sources(${uv_client} PRIVATE
-  src/uv_client.cpp
-)
-target_link_libraries(${uv_client} PRIVATE ${uv_common})
-target_compile_features(${uv_client} PRIVATE cxx_std_20)
-set_target_properties(${uv_client} PROPERTIES FOLDER ${uv})
+add_subdirectory(uv)
