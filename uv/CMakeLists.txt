@@ -5,6 +5,9 @@ target_link_libraries(${uv_common} INTERFACE
 )
 target_include_directories(${uv_common} INTERFACE include)
 
+cmake_print_variables(CMAKE_SOURCE_DIR)
+cmake_print_variables(CMAKE_CURRENT_SOURCE_DIR)
+
 set(uv uv)
 
 set(CMAKE_FOLDER ${uv})

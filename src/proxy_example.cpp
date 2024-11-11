@@ -43,16 +43,17 @@ namespace type
     };
 } // namespace type
 
-// 定義兩個分派類型MemDraw和MemArea
-PRO_DEF_MEM_DISPATCH(MemDraw, draw); // 有draw成員函數
-PRO_DEF_MEM_DISPATCH(MemArea, area); // 有area成員函數
+// 定義兩個分派成員函數draw和area
+PRO_DEF_MEM_DISPATCH(MemDraw, draw); // draw成員函數
+PRO_DEF_MEM_DISPATCH(MemArea, area); // area成員函數
 
-// 定義支持以上分派類型的偽裝類
-struct Shape : pro::facade_builder                               // 偽裝類構造器
-               ::add_convention<MemDraw, void()>                 // draw的簽名是void draw()
-               ::add_convention<MemArea, double()>               // area的簽名是double area()
-               ::support_copy<pro::constraint_level::nontrivial> // 支持複製
-               ::build
+// 定義支持以上分派成員函數的偽裝類
+struct Shape                                            //
+    : pro::facade_builder                               // 偽裝類構造器
+      ::add_convention<MemDraw, void()>                 // draw的簽名是void draw()
+      ::add_convention<MemArea, double()>               // area的簽名是double area()
+      ::support_copy<pro::constraint_level::nontrivial> // 支持複製
+      ::build
 {
 };
 

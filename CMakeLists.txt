@@ -2,10 +2,17 @@
 cmake_minimum_required(VERSION 3.31.0)
 
 # 項目名
-set(project cpp-exercise)
-project(${project})
+project(cpp-exercise)
 
 include(CMakePrintHelpers) # cmake_print_variables
+
+cmake_print_variables(PROJECT_NAME)
+cmake_print_variables(PROJECT_SOURCE_DIR)
+cmake_print_variables(PROJECT_BINARY_DIR)
+cmake_print_variables(PROJECT_IS_TOP_LEVEL)
+
+cmake_print_variables(CMAKE_SOURCE_DIR)
+cmake_print_variables(CMAKE_CURRENT_SOURCE_DIR)
 
 # 輸出目錄
 set(source_dir ${CMAKE_CURRENT_SOURCE_DIR})
