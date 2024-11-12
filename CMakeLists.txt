@@ -32,6 +32,8 @@ find_package(proxy CONFIG)
 
 find_package(Catch2 CONFIG REQUIRED)
 
+find_package(libuv CONFIG REQUIRED)
+
 set(main main)
 add_executable(${main})
 target_sources(${main} PRIVATE
@@ -51,7 +53,7 @@ find_package(hello-imgui CONFIG)
 
 find_package(nlohmann_json CONFIG)
 
-if((TARGET hello-imgui::hello_imgui) AND(TARGET nlohmann_json::nlohmann_json))
+if((TARGET hello-imgui::hello_imgui) AND (TARGET nlohmann_json::nlohmann_json))
   set(hello_imgui_example hello_imgui_example)
   add_executable(${hello_imgui_example})
   target_sources(${hello_imgui_example} PRIVATE
@@ -74,6 +76,8 @@ if(TARGET msft_proxy)
   target_compile_features(${proxy_example} PRIVATE cxx_std_20)
 endif()
 
-find_package(libuv CONFIG REQUIRED)
-
 add_subdirectory(uv)
+
+find_path(DYLIB_INCLUDE_DIRS "dylib.hpp")
+
+add_subdirectory(shared_library)
