@@ -1,5 +1,4 @@
-﻿set(uv uv)
-set(CMAKE_FOLDER ${uv})
+﻿set(CMAKE_FOLDER uv)
 
 set(uv_common uv_common)
 add_library(${uv_common} INTERFACE)

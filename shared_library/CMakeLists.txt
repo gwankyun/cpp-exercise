@@ -1,4 +1,6 @@
-﻿# 生成動態庫
+﻿set(CMAKE_FOLDER shared_library)
+
+# 生成動態庫
 set(shared_lib shared_lib)
 add_library(${shared_lib} SHARED)
 target_sources(${shared_lib} PRIVATE
