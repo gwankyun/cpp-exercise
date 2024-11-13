@@ -22,6 +22,17 @@ struct Point
     int y;
 };
 
+struct Persion
+{
+    char* name;
+    int age;
+};
+
+struct List
+{
+    void* data;
+};
+
 #ifdef __cplusplus // 衹在C++下有效
 extern "C"         // 表示像C語言那樣導出的名字不作修飾。
 {
@@ -30,10 +41,10 @@ extern "C"         // 表示像C語言那樣導出的名字不作修飾。
     DYN_LIB_API void Point_init(Point* _point);
     DYN_LIB_API double Point_distance(Point* _point, Point* _other);
     // DYN_LIB_API void get_buffer(int a[]);
-    // DYN_LIB_API void update_char_p(char* str);
-    // DYN_LIB_API void update_int(int* i);
-    // DYN_LIB_API void update_array(int a[]);
-    // DYN_LIB_API void update_struct(Point* point);
+    DYN_LIB_API void set_char_p(char** _str, const char* _value);
+    DYN_LIB_API void set_int(int* _v, int _n);
+    DYN_LIB_API void set_array(int _a[], size_t _index, int _value);
+    DYN_LIB_API void set_struct(Point* _point, int _x, int _y);
 #ifdef __cplusplus
 }
 #endif

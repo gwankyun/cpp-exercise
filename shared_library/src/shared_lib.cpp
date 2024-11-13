@@ -3,6 +3,8 @@
 #include <cstring>
 #include <iostream>
 #include <numbers>
+#include <algorithm>
+#include <list>
 // #include <log.hpp>
 // #include <shared_lib.h>
 #include "../include/shared_lib.h"
@@ -28,6 +30,47 @@ double Point_distance(Point* _point, Point* _other)
     auto px = std::pow<double>(_point->x - _other->x, 2.0);
     auto py = std::pow<double>(_point->y - _other->y, 2.0);
     return std::sqrt(px + py);
+}
+
+void set_int(int* _v, int _n)
+{
+    *_v = _n;
+}
+
+void set_char_p(char** _str, const char* _value)
+{
+    *_str = const_cast<char*>(_value);
+}
+
+void set_struct(Point* _point, int _x, int _y)
+{
+    _point->x = _x;
+    _point->y = _y;
+}
+
+void set_array(int _a[], size_t _index, int _value)
+{
+    _a[_index] = _value;
+}
+
+void List_init(List* _list)
+{
+    _list->data = new std::list<std::string>;
+}
+
+void List_deinit(List* _list)
+{
+    delete static_cast<List*>(_list->data);
+}
+
+void List_push_back(List* _list, const char* _value)
+{
+    static_cast<std::list<std::string>*>(_list->data)->push_back(_value);
+}
+
+void List_pop_back(List* _list)
+{
+    static_cast<std::list<std::string>*>(_list->data)->pop_back();
 }
 
 // void get_buffer(int a[])
