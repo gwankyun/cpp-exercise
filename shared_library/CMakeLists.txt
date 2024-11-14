@@ -16,6 +16,7 @@ add_executable(${shared_lib_test})
 target_sources(${shared_lib_test} PRIVATE
   src/shared_lib_test.cpp
   include/shared_lib.h
+  shared_lib_test.py
 )
 target_include_directories(${shared_lib_test} PRIVATE ${DYLIB_INCLUDE_DIRS})
 target_link_libraries(${shared_lib_test} PRIVATE spdlog::spdlog Catch2::Catch2)
