@@ -81,3 +81,5 @@ add_subdirectory(uv)
 find_path(DYLIB_INCLUDE_DIRS "dylib.hpp")
 
 add_subdirectory(shared_library)
+
+add_subdirectory(module)

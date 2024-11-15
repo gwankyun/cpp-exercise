@@ -15,6 +15,13 @@ target_sources(${uv_server} PRIVATE
 )
 target_link_libraries(${uv_server} PRIVATE ${uv_common})
 
+set(uv_server_more uv_server_more)
+add_executable(${uv_server_more})
+target_sources(${uv_server_more} PRIVATE
+  src/uv_server_more.cpp
+)
+target_link_libraries(${uv_server_more} PRIVATE ${uv_common})
+
 set(uv_client uv_client)
 add_executable(${uv_client})
 target_sources(${uv_client} PRIVATE
