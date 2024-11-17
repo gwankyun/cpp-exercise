@@ -8,6 +8,8 @@
 #include <queue>
 #include <string>
 #include <vector>
+#include <unordered_map>
+#include <map>
 
 #include <boost/scope/defer.hpp>
 #include <spdlog/spdlog.h>
@@ -20,22 +22,33 @@ void on_alloc(uv_handle_t* _handle, size_t _suggested_size, uv_buf_t* _buf)
     _buf->len = _suggested_size;
 }
 
+std::unordered_map<uv_stream_t*, bool> g_read_table;
+std::unordered_map<uv_write_t*, bool> g_write_table;
+
 void on_close(uv_handle_t* _handle)
 {
     if (_handle != nullptr)
     {
+        auto ri = g_read_table.find((uv_stream_t*)_handle);
+        if (ri != g_read_table.end())
+        {
+            g_read_table.erase(ri);
+        }
+        auto wi = g_write_table.find((uv_write_t*)_handle);
+        if (wi != g_write_table.end())
+        {
+            g_write_table.erase(wi);
+        }
         delete (std::vector<char>*)_handle->data;
         delete _handle;
     }
 }
 
-std::queue<std::function<void(uv_write_t* _req, int _status)>> g_write_task;
-std::queue<std::function<void(uv_stream_t* _stream, ssize_t _nread, const uv_buf_t* _buf)>> g_read_task;
-std::queue<std::function<void(uv_stream_t* _server, int _status)>> g_connection_task;
+std::queue<std::function<void(int _status)>> g_write_task;
+std::queue<std::function<void(ssize_t _nread, const uv_buf_t* _buf)>> g_read_task;
+std::queue<std::function<void(int _status)>> g_connection_task;
 
 void on_connection(uv_stream_t* _server, int _status);
-
-bool g_listen = false;
 
 namespace detail
 {
@@ -51,7 +64,7 @@ namespace detail
         auto front = task.front();
         g_connection_task.pop();
 
-        front(_server, _status);
+        front(_status);
     }
 
     void on_write(uv_write_t* _req, int _status)
@@ -66,7 +79,7 @@ namespace detail
         auto front = task.front();
         task.pop();
 
-        front(_req, _status);
+        front(_status);
     }
 
     void on_read(uv_stream_t* _stream, ssize_t _nread, const uv_buf_t* _buf)
@@ -81,40 +94,61 @@ namespace detail
         auto front = task.front();
         task.pop();
 
-        front(_stream, _nread, _buf);
+        front(_nread, _buf);
     }
 } // namespace detail
 
-void async_listen(uv_stream_t* stream, int backlog, std::function<void(uv_stream_t* _server, int _status)> _fn)
+std::map<uv_stream_t*, bool> g_listem_table;
+
+void async_listen(uv_stream_t* stream, int backlog, std::function<void(int _status)> _fn)
 {
-    if (!g_listen)
+    auto iter = g_listem_table.find(stream);
+    if (iter == g_listem_table.end())
     {
         int r = uv_listen(stream, backlog, on_connection);
         if (r)
         {
             SPDLOG_ERROR("listen error: {}", uv_strerror(r));
-            // _fn(stream, r);
             return;
         }
-        g_listen = true;
+        // g_listen = true;
+        g_listem_table[stream] = true;
     }
-
-    // async_listen(stream, backlog, );
 
     g_connection_task.push(_fn);
 }
 
-void async_read(std::function<void(uv_stream_t* _stream, ssize_t _nread, const uv_buf_t* _buf)> _fn)
+
+void async_read(uv_stream_t* stream, uv_alloc_cb alloc_cb,
+                std::function<void(ssize_t _nread, const uv_buf_t* _buf)> _fn)
 {
+    auto iter = g_read_table.find(stream);
+    if (iter == g_read_table.end())
+    {
+       uv_read_start(stream, on_alloc, detail::on_read);
+       g_read_table[stream] = true;
+    }
+
     g_read_task.push(_fn);
 }
 
-void async_write(std::function<void(uv_write_t* _req, int _status)> _fn)
+void async_write(uv_write_t* req, uv_stream_t* handle, const uv_buf_t bufs[], unsigned int nbufs,
+                 std::function<void(int _status)> _fn)
 {
+    auto iter = g_write_table.find(req);
+    if (iter == g_write_table.end())
+    {
+        //    uv_read_start(req, on_alloc, detail::on_read);
+        uv_write(req, handle, bufs, nbufs, detail::on_write);
+        g_write_table[req] = true;
+    }
+
     g_write_task.push(_fn);
 }
 
-void on_write_task(uv_write_t* _req, int _status)
+void on_read(uv_stream_t* _stream, ssize_t _nread, const uv_buf_t* _buf);
+
+void on_write(uv_write_t* _req, int _status)
 {
     SPDLOG_INFO("status: {}", _status);
     BOOST_SCOPE_DEFER[&]
@@ -125,11 +159,17 @@ void on_write_task(uv_write_t* _req, int _status)
     if (_status < 0)
     {
         SPDLOG_ERROR("write error: {}", uv_strerror(_status));
+        uv_close((uv_handle_t*)_req->handle, on_close);
     }
-    uv_close((uv_handle_t*)_req->handle, on_close);
+    else
+    {
+        auto handle = (uv_stream_t*)_req->handle;
+        async_read(handle, on_alloc, [handle](ssize_t _nread, const uv_buf_t* _buf) { on_read(handle, _nread, _buf); });
+    }
 }
 
-void on_read_task(uv_stream_t* _stream, ssize_t _nread, const uv_buf_t* _buf)
+
+void on_read(uv_stream_t* _stream, ssize_t _nread, const uv_buf_t* _buf)
 {
     BOOST_SCOPE_DEFER[&]
     {
@@ -160,12 +200,10 @@ void on_read_task(uv_stream_t* _stream, ssize_t _nread, const uv_buf_t* _buf)
     auto req = new uv_write_t();
     req->data = message;
     auto wrbuf = uv_buf_init((char*)message->c_str(), message->size());
-    uv_write(req, _stream, &wrbuf, 1, detail::on_write);
-    // g_write_task.push([](uv_write_t* _req, int _status) { on_write_task(_req, _status); });
-    async_write([](uv_write_t* _req, int _status) { on_write_task(_req, _status); });
+    async_write(req, _stream, &wrbuf, 1, [req](int _status) { on_write(req, _status); });
 }
 
-void on_connection_task(uv_stream_t* _server, int _status)
+void on_connection(uv_stream_t* _server, int _status)
 {
     SPDLOG_INFO("status: {}", _status);
     if (_status < 0)
@@ -175,20 +213,16 @@ void on_connection_task(uv_stream_t* _server, int _status)
         return;
     }
 
-    // async_listen([](uv_stream_t* _server, int _status) { on_connection_task(_server, _status); });
-    async_listen((uv_stream_t*)&_server, 128,
-                 [](uv_stream_t* _server, int _status) { on_connection_task(_server, _status); });
+    async_listen((uv_stream_t*)_server, 128,
+                 [_server](int _status) { on_connection((uv_stream_t*)_server, _status); });
 
     auto client = new uv_tcp_t();
     uv_tcp_init(uv_default_loop(), client);
     client->data = new std::vector<char>();
     if (uv_accept(_server, (uv_stream_t*)client) == 0)
     {
-        uv_read_start((uv_stream_t*)client, on_alloc, detail::on_read);
-        // g_read_task.push([](uv_stream_t* _stream, ssize_t _nread, const uv_buf_t* _buf)
-        //                  { on_read_task(_stream, _nread, _buf); });
-        async_read([](uv_stream_t* _stream, ssize_t _nread, const uv_buf_t* _buf)
-                   { on_read_task(_stream, _nread, _buf); });
+        async_read((uv_stream_t*)client, on_alloc,
+                   [client](ssize_t _nread, const uv_buf_t* _buf) { on_read((uv_stream_t*)client, _nread, _buf); });
     }
     else
     {
@@ -216,8 +250,7 @@ int main(int _argc, char* _argv[])
     uv_ip4_addr("0.0.0.0", port, &addr);
 
     uv_tcp_bind(&server, (const struct sockaddr*)&addr, 0);
-    async_listen((uv_stream_t*)&server, 128,
-                 [](uv_stream_t* _server, int _status) { on_connection_task(_server, _status); });
+    async_listen((uv_stream_t*)&server, 128, [server](int _status) { on_connection((uv_stream_t*)&server, _status); });
 
     SPDLOG_INFO("Listening on port {}...", port);
     uv_run(uv_default_loop(), UV_RUN_DEFAULT);
