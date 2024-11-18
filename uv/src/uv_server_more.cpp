@@ -79,7 +79,10 @@ namespace detail
         auto front = task.front();
         task.pop();
 
-        front(_status);
+        if (g_write_table.find(_req) != g_write_table.end())
+        {
+            front(_status);
+        }
     }
 
     void on_read(uv_stream_t* _stream, ssize_t _nread, const uv_buf_t* _buf)
@@ -94,7 +97,10 @@ namespace detail
         auto front = task.front();
         task.pop();
 
-        front(_nread, _buf);
+        if (g_read_table.find(_stream) != g_read_table.end())
+        {
+            front(_nread, _buf);
+        }
     }
 } // namespace detail
 
@@ -178,9 +184,12 @@ void on_read(uv_stream_t* _stream, ssize_t _nread, const uv_buf_t* _buf)
     if (_nread < 0)
     {
         // 如果讀取錯誤或連接已關閉，釋放內存並關閉客戶端
-        uv_close((uv_handle_t*)_stream, on_close);
-        SPDLOG_INFO("uv_close");
-        SPDLOG_INFO("================");
+        if (_stream != nullptr)
+        {
+            uv_close((uv_handle_t*)_stream, on_close);
+            SPDLOG_INFO("uv_close");
+            SPDLOG_INFO("================");
+        }
         return;
     }
 
