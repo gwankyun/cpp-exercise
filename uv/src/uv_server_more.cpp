@@ -5,11 +5,11 @@
 #include <algorithm>
 #include <functional>
 #include <iostream>
+#include <map>
 #include <queue>
 #include <string>
-#include <vector>
 #include <unordered_map>
-#include <map>
+#include <vector>
 
 #include <boost/scope/defer.hpp>
 #include <spdlog/spdlog.h>
@@ -22,31 +22,38 @@ void on_alloc(uv_handle_t* _handle, size_t _suggested_size, uv_buf_t* _buf)
     _buf->len = _suggested_size;
 }
 
-std::unordered_map<uv_stream_t*, bool> g_read_table;
-std::unordered_map<uv_write_t*, bool> g_write_table;
+// std::unordered_map<uv_stream_t*, bool> g_read_table;
+// std::unordered_map<uv_write_t*, bool> g_write_table;
+
+struct context
+{
+    std::unordered_map<uv_stream_t*, bool> read_table;
+    std::unordered_map<uv_write_t*, bool> write_table;
+    std::queue<std::function<void(int _status)>> g_write_task;
+    std::queue<std::function<void(ssize_t _nread, const uv_buf_t* _buf)>> g_read_task;
+    std::queue<std::function<void(int _status)>> g_connection_task;
+};
+
+context g_context;
 
 void on_close(uv_handle_t* _handle)
 {
     if (_handle != nullptr)
     {
-        auto ri = g_read_table.find((uv_stream_t*)_handle);
-        if (ri != g_read_table.end())
+        auto ri = g_context.read_table.find((uv_stream_t*)_handle);
+        if (ri != g_context.read_table.end())
         {
-            g_read_table.erase(ri);
+            g_context.read_table.erase(ri);
         }
-        auto wi = g_write_table.find((uv_write_t*)_handle);
-        if (wi != g_write_table.end())
+        auto wi = g_context.write_table.find((uv_write_t*)_handle);
+        if (wi != g_context.write_table.end())
         {
-            g_write_table.erase(wi);
+            g_context.write_table.erase(wi);
         }
         delete (std::vector<char>*)_handle->data;
         delete _handle;
     }
 }
-
-std::queue<std::function<void(int _status)>> g_write_task;
-std::queue<std::function<void(ssize_t _nread, const uv_buf_t* _buf)>> g_read_task;
-std::queue<std::function<void(int _status)>> g_connection_task;
 
 void on_connection(uv_stream_t* _server, int _status);
 
@@ -55,14 +62,14 @@ namespace detail
     void on_connection(uv_stream_t* _server, int _status)
     {
         SPDLOG_INFO("");
-        auto& task = g_connection_task;
+        auto& task = g_context.g_connection_task;
         if (task.empty())
         {
             return;
         }
 
         auto front = task.front();
-        g_connection_task.pop();
+        g_context.g_connection_task.pop();
 
         front(_status);
     }
@@ -70,7 +77,7 @@ namespace detail
     void on_write(uv_write_t* _req, int _status)
     {
         SPDLOG_INFO("");
-        auto& task = g_write_task;
+        auto& task = g_context.g_write_task;
         if (task.empty())
         {
             return;
@@ -79,7 +86,7 @@ namespace detail
         auto front = task.front();
         task.pop();
 
-        if (g_write_table.find(_req) != g_write_table.end())
+        if (g_context.write_table.find(_req) != g_context.write_table.end())
         {
             front(_status);
         }
@@ -88,7 +95,7 @@ namespace detail
     void on_read(uv_stream_t* _stream, ssize_t _nread, const uv_buf_t* _buf)
     {
         SPDLOG_INFO("");
-        auto& task = g_read_task;
+        auto& task = g_context.g_read_task;
         if (task.empty())
         {
             return;
@@ -97,7 +104,7 @@ namespace detail
         auto front = task.front();
         task.pop();
 
-        if (g_read_table.find(_stream) != g_read_table.end())
+        if (g_context.read_table.find(_stream) != g_context.read_table.end())
         {
             front(_nread, _buf);
         }
@@ -121,35 +128,34 @@ void async_listen(uv_stream_t* stream, int backlog, std::function<void(int _stat
         g_listem_table[stream] = true;
     }
 
-    g_connection_task.push(_fn);
+    g_context.g_connection_task.push(_fn);
 }
-
 
 void async_read(uv_stream_t* stream, uv_alloc_cb alloc_cb,
                 std::function<void(ssize_t _nread, const uv_buf_t* _buf)> _fn)
 {
-    auto iter = g_read_table.find(stream);
-    if (iter == g_read_table.end())
+    auto iter = g_context.read_table.find(stream);
+    if (iter == g_context.read_table.end())
     {
-       uv_read_start(stream, on_alloc, detail::on_read);
-       g_read_table[stream] = true;
+        uv_read_start(stream, on_alloc, detail::on_read);
+        g_context.read_table[stream] = true;
     }
 
-    g_read_task.push(_fn);
+    g_context.g_read_task.push(_fn);
 }
 
 void async_write(uv_write_t* req, uv_stream_t* handle, const uv_buf_t bufs[], unsigned int nbufs,
                  std::function<void(int _status)> _fn)
 {
-    auto iter = g_write_table.find(req);
-    if (iter == g_write_table.end())
+    auto iter = g_context.write_table.find(req);
+    if (iter == g_context.write_table.end())
     {
         //    uv_read_start(req, on_alloc, detail::on_read);
         uv_write(req, handle, bufs, nbufs, detail::on_write);
-        g_write_table[req] = true;
+        g_context.write_table[req] = true;
     }
 
-    g_write_task.push(_fn);
+    g_context.g_write_task.push(_fn);
 }
 
 void on_read(uv_stream_t* _stream, ssize_t _nread, const uv_buf_t* _buf);
@@ -174,7 +180,6 @@ void on_write(uv_write_t* _req, int _status)
     }
 }
 
-
 void on_read(uv_stream_t* _stream, ssize_t _nread, const uv_buf_t* _buf)
 {
     BOOST_SCOPE_DEFER[&]
@@ -194,6 +199,7 @@ void on_read(uv_stream_t* _stream, ssize_t _nread, const uv_buf_t* _buf)
     }
 
     SPDLOG_INFO("nread: {}", _nread);
+    SPDLOG_INFO("len: {}", _buf->len);
 
     auto buffer = (std::vector<char>*)_stream->data;
     std::copy_n(_buf->base, _nread, std::back_inserter(*buffer));
@@ -222,8 +228,7 @@ void on_connection(uv_stream_t* _server, int _status)
         return;
     }
 
-    async_listen((uv_stream_t*)_server, 128,
-                 [_server](int _status) { on_connection((uv_stream_t*)_server, _status); });
+    async_listen((uv_stream_t*)_server, 128, [_server](int _status) { on_connection((uv_stream_t*)_server, _status); });
 
     auto client = new uv_tcp_t();
     uv_tcp_init(uv_default_loop(), client);

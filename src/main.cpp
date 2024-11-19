@@ -59,6 +59,31 @@ TEST_CASE("void* and any", "[ptr]")
     REQUIRE(destroy.any);
 }
 
+void register_callback(void* _context, void (*_func)(void*))
+{
+    _func(_context);
+}
+
+struct Context {
+    std::function<void()> bind;
+    static void call(void* _self)
+    {
+        static_cast<Context*>(_self)->bind();
+    }
+};
+
+TEST_CASE("register_callback", "[lambda]")
+{
+    int x = 0;
+    auto lambda = [&] { x = 1; };
+
+    Context context{lambda};
+
+    register_callback(&context, Context::call);
+
+    REQUIRE(x == 1);
+}
+
 int main(int _argc, char* _argv[])
 {
     std::string log_format{"[%C-%m-%d %T.%e] [%^%L%$] [%-20!!:%4#] %v"};
