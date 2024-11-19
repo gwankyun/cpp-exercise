@@ -59,12 +59,15 @@ TEST_CASE("void* and any", "[ptr]")
     REQUIRE(destroy.any);
 }
 
-void register_callback(void* _context, void (*_func)(void*))
+typedef void (*callback)(void*);
+
+void register_callback(void* _context, callback _func)
 {
     _func(_context);
 }
 
-struct Context {
+struct Context
+{
     std::function<void()> bind;
     static void call(void* _self)
     {
