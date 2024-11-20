@@ -78,10 +78,11 @@ struct Context
 TEST_CASE("register_callback", "[lambda]")
 {
     int x = 0;
-    auto lambda = [&] { x = 1; };
 
-    Context context{lambda};
+    // 將lambda轉成std::function<void()>包裝到類中
+    Context context{[&] { x = 1; }};
 
+    // 通過靜態類方法將void*轉成類再調用之前保存的lambda
     register_callback(&context, Context::call);
 
     REQUIRE(x == 1);
