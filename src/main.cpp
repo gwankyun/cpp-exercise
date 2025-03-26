@@ -2,11 +2,22 @@
 
 #include <any>
 #include <functional>
+#include <memory>
 
 #include <boost/scope/scope_exit.hpp>
 #include <catch2/../catch2/catch_session.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <spdlog/spdlog.h>
+
+template <typename T>
+inline void delete_ptr(T*& _ptr)
+{
+    if (_ptr != nullptr)
+    {
+        delete _ptr;
+        _ptr = nullptr;
+    }
+}
 
 TEST_CASE("void* and any", "[ptr]")
 {
@@ -29,6 +40,7 @@ TEST_CASE("void* and any", "[ptr]")
     {
         bool void_p = false;
         bool any = false;
+        bool unique = false;
     } destroy;
 
     void* obj_void_p = new Object(
@@ -55,13 +67,24 @@ TEST_CASE("void* and any", "[ptr]")
         }
     }
 
+    {
+        auto unique = [&](int* _ptr)
+        {
+            delete _ptr;
+            SPDLOG_INFO("unique_ptr");
+            destroy.unique = true;
+        };
+        std::unique_ptr<int, decltype(unique)> ptr(new int(0), unique);
+    }
+
     REQUIRE(destroy.void_p);
     REQUIRE(destroy.any);
+    REQUIRE(destroy.unique);
 }
 
 typedef void (*callback)(void*);
 
-void register_callback(void* _context, callback _func)
+void apply_callback(callback _func, void* _context)
 {
     _func(_context);
 }
@@ -75,7 +98,7 @@ struct Context
     }
 };
 
-TEST_CASE("register_callback", "[lambda]")
+TEST_CASE("apply_callback", "[lambda]")
 {
     int x = 0;
 
@@ -83,7 +106,7 @@ TEST_CASE("register_callback", "[lambda]")
     Context context{[&] { x = 1; }};
 
     // 通過靜態類方法將void*轉成類再調用之前保存的lambda
-    register_callback(&context, Context::call);
+    apply_callback(Context::call, &context);
 
     REQUIRE(x == 1);
 }
@@ -92,6 +115,8 @@ int main(int _argc, char* _argv[])
 {
     std::string log_format{"[%C-%m-%d %T.%e] [%^%L%$] [%-20!!:%4#] %v"};
     spdlog::set_pattern(log_format);
+
+    SPDLOG_INFO("__cplusplus: {}", __cplusplus);
 
     auto result = Catch::Session().run(_argc, _argv);
     return result;

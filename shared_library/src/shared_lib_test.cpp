@@ -15,7 +15,7 @@ namespace fs = std::filesystem;
 
 TEST_CASE("void* and any", "[ptr]")
 {
-    auto dll_path = fs::current_path() / "shared_lib.dll";
+    auto dll_path = fs::current_path() / "bin/shared_lib.dll";
     CHECK(fs::exists(dll_path));
 
     dylib lib(dll_path);

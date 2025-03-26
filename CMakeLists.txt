@@ -1,5 +1,5 @@
 ﻿# cmake最低版本
-cmake_minimum_required(VERSION 3.31.0)
+cmake_minimum_required(VERSION 4.0.0)
 
 # 項目名
 project(cpp-exercise)
@@ -34,13 +34,20 @@ find_package(Catch2 CONFIG REQUIRED)
 
 find_package(libuv CONFIG REQUIRED)
 
+set(msvc_options)
+list(APPEND msvc_options
+  "/W4" "/MP" "/Zc:__cplusplus" "/experimental:module"
+  )
+
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:${msvc_options}>")
+
 set(main main)
 add_executable(${main})
 target_sources(${main} PRIVATE
   src/main.cpp
 )
 target_link_libraries(${main} PRIVATE spdlog::spdlog Boost::scope Catch2::Catch2)
-target_compile_features(${main} PRIVATE cxx_std_20)
+target_compile_features(${main} PRIVATE cxx_std_23)
 
 set(intrusive_container intrusive_container)
 add_executable(${intrusive_container})
