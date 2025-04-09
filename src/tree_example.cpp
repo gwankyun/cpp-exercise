@@ -1,9 +1,9 @@
 ﻿#include <cassert>
 #include <queue>
+#include <stack>
 #include <string>
 #include <unordered_set>
 #include <vector>
-#include <stack>
 
 #include <catch2/../catch2/catch_session.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -175,11 +175,11 @@ namespace tree
             auto node = q.front();
             q.pop();
             _result.push_back(node->value);
-            if (node->left!= nullptr)
+            if (node->left != nullptr)
             {
                 q.push(node->left);
             }
-            if (node->right!= nullptr)
+            if (node->right != nullptr)
             {
                 q.push(node->right);
             }
@@ -208,11 +208,11 @@ namespace tree
                 auto node = s.top();
                 s.pop();
                 _result.push_back(node->value);
-                if (node->right!= nullptr)
+                if (node->right != nullptr)
                 {
                     s.push(node->right);
                 }
-                if (node->left!= nullptr)
+                if (node->left != nullptr)
                 {
                     s.push(node->left);
                 }
@@ -270,25 +270,28 @@ namespace tree
             std::stack<Node<T>*> s;
             std::stack<Node<T>*> output;
             s.push(_node);
+
+            auto push = [&s](Node<T>* _node)
+            {
+                if (_node != nullptr)
+                {
+                    s.push(_node);
+                }
+            };
+
             while (!s.empty())
             {
                 auto node = s.top();
                 s.pop();
                 output.push(node);
-                if (node->left!= nullptr)
-                {
-                    s.push(node->left);
-                }
-                if (node->right!= nullptr)
-                {
-                    s.push(node->right);
-                }
+                push(node->left);
+                push(node->right);
             }
             while (!output.empty())
             {
                 auto node = output.top();
                 output.pop();
-                _result.push_back(node->value); 
+                _result.push_back(node->value);
             }
         }
     }
