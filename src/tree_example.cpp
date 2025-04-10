@@ -169,20 +169,24 @@ namespace tree
     void levelOrder(Node<T>* _node, std::vector<T>& _result)
     {
         std::queue<Node<T>*> q;
+
+        auto push = [&q](Node<T>* _node)
+        {
+            if (_node != nullptr)
+            {
+                q.push(_node);
+            }
+        };
+
         q.push(_node);
+
         while (!q.empty())
         {
             auto node = q.front();
             q.pop();
             _result.push_back(node->value);
-            if (node->left != nullptr)
-            {
-                q.push(node->left);
-            }
-            if (node->right != nullptr)
-            {
-                q.push(node->right);
-            }
+            push(node->left);
+            push(node->right);
         }
     }
 
@@ -202,20 +206,23 @@ namespace tree
         else if (_method == TraversalMethod::Iterative)
         {
             std::stack<Node<T>*> s;
+
+            auto push = [&s](Node<T>* _node)
+            {
+                if (_node != nullptr)
+                {
+                    s.push(_node);
+                }
+            };
+
             s.push(_node);
             while (!s.empty())
             {
                 auto node = s.top();
                 s.pop();
                 _result.push_back(node->value);
-                if (node->right != nullptr)
-                {
-                    s.push(node->right);
-                }
-                if (node->left != nullptr)
-                {
-                    s.push(node->left);
-                }
+                push(node->right);
+                push(node->left);
             }
         }
     }
