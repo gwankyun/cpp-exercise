@@ -1,5 +1,8 @@
 ﻿#include <cassert>
+#include <cstdint>
+#include <cstdlib>
 
+#include <algorithm>
 #include <any>
 #include <functional>
 #include <memory>
@@ -7,6 +10,7 @@
 #include <boost/scope/scope_exit.hpp>
 #include <catch2/../catch2/catch_session.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <spdlog/fmt/bin_to_hex.h>
 #include <spdlog/spdlog.h>
 
 template <typename T>
@@ -109,6 +113,38 @@ TEST_CASE("apply_callback", "[lambda]")
     apply_callback(Context::call, &context);
 
     REQUIRE(x == 1);
+}
+
+TEST_CASE("memset", "mem")
+{
+    std::vector<std::uint8_t> v8(8, 1);
+    SPDLOG_INFO("v: {}", spdlog::to_hex(v8));
+
+    std::vector<std::uint32_t> v32(8, 1);
+    auto v32a = v32;
+    memset(v32.data(),                        // 目標
+           0,                                 // 值
+           v32.size() * sizeof(std::uint32_t) // 以字節為單位的長度
+    );
+    std::fill_n(v32a.begin(), v32a.size(), 0);
+    SPDLOG_INFO("v32: {}", spdlog::to_hex(v32.begin(), v32.end()));
+    REQUIRE(v32 == v32a);
+}
+
+TEST_CASE("memcpy", "mem")
+{
+    std::vector<std::uint8_t> v8(64, 0);
+    auto v8a = v8;
+    SPDLOG_INFO("v: {}", spdlog::to_hex(v8));
+    std::vector<std::uint32_t> v32(4, 1);
+
+    memcpy(v8.data(),                         // 目標
+           v32.data(),                        // 源
+           v32.size() * sizeof(std::uint32_t) // 以字節為單位的長度
+    );
+    std::copy_n(v32.data(), v32.size(), (std::uint32_t*)v8a.data());
+    SPDLOG_INFO("v: {}", spdlog::to_hex(v8));
+    REQUIRE(v8 == v8a);
 }
 
 int main(int _argc, char* _argv[])

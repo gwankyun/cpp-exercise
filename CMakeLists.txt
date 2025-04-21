@@ -1,5 +1,5 @@
 ﻿# cmake最低版本
-cmake_minimum_required(VERSION 4.0.0)
+cmake_minimum_required(VERSION 3.10...4.0)
 
 # 項目名
 project(cpp-exercise)
