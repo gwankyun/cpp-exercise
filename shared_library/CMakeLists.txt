@@ -7,7 +7,7 @@ target_sources(${shared_lib} PRIVATE
   src/shared_lib.cpp
   include/shared_lib.h
 )
-target_compile_definitions(${shared_lib} PRIVATE DLL_EXPORT)
+target_compile_definitions(${shared_lib} PRIVATE DYN_LIB_EXPORT)
 target_compile_features(${shared_lib} PRIVATE cxx_std_20)
 
 # 調用動態庫
