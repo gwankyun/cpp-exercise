@@ -35,9 +35,16 @@ find_package(Catch2 CONFIG REQUIRED)
 find_package(libuv CONFIG REQUIRED)
 
 set(msvc_options)
-list(APPEND msvc_options
-  "/W4" "/MP" "/Zc:__cplusplus" "/experimental:module"
-  )
+list(APPEND msvc_options "/W4" "/MP")
+
+# 引入__cplusplus
+list(APPEND msvc_options "/Zc:__cplusplus")
+
+# 模塊支持
+list(APPEND msvc_options "/experimental:module")
+
+# 柔性數組
+list(APPEND msvc_options "/Zc:zeroSizeArrayNew")
 
 add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:${msvc_options}>")
 
@@ -60,7 +67,7 @@ find_package(hello-imgui CONFIG)
 
 find_package(nlohmann_json CONFIG)
 
-if((TARGET hello-imgui::hello_imgui) AND (TARGET nlohmann_json::nlohmann_json))
+if((TARGET hello-imgui::hello_imgui) AND(TARGET nlohmann_json::nlohmann_json))
   set(hello_imgui_example hello_imgui_example)
   add_executable(${hello_imgui_example})
   target_sources(${hello_imgui_example} PRIVATE
@@ -69,7 +76,7 @@ if((TARGET hello-imgui::hello_imgui) AND (TARGET nlohmann_json::nlohmann_json))
   target_link_libraries(${hello_imgui_example} PRIVATE
     hello-imgui::hello_imgui
     nlohmann_json::nlohmann_json
-    )
+  )
   target_compile_features(${hello_imgui_example} PRIVATE cxx_std_20)
 endif()
 

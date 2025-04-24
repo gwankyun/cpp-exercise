@@ -9,7 +9,7 @@
 #endif
 
 #ifndef DYN_LIB_API
-#  ifdef DYN_LIB_EXPORT // 動態庫需要定義DLL_EXPORT這個宏
+#  ifdef DYN_LIB_EXPORT // 動態庫需要定義DYN_LIB_EXPORT這個宏
 #    define DYN_LIB_API DYN_LIB_DECLSPEC(dllexport)
 #  else
 #    define DYN_LIB_API DYN_LIB_DECLSPEC(dllimport)

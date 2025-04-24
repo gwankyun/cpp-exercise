@@ -1,4 +1,5 @@
 ﻿#include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 
@@ -7,11 +8,52 @@
 #include <functional>
 #include <memory>
 
+#include <boost/scope/defer.hpp>
 #include <boost/scope/scope_exit.hpp>
 #include <catch2/../catch2/catch_session.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <spdlog/fmt/bin_to_hex.h>
 #include <spdlog/spdlog.h>
+
+#ifndef PRAGMA_SUPPORTED
+#  define PRAGMA_SUPPORTED 1
+#endif
+
+#ifndef PRAGMA
+#  if PRAGMA_SUPPORTED
+#    define PRAGMA(x) _Pragma(#x)
+#  else
+#    define PRAGMA(x) __pragma(x)
+#  endif
+#endif
+
+#ifndef PRAGMA_WARNING_PUSH
+#  define PRAGMA_WARNING_PUSH() PRAGMA(warning(push))
+#endif
+
+#ifndef PRAGMA_WARNING_POP
+#  define PRAGMA_WARNING_POP() PRAGMA(warning(pop))
+#endif
+
+#ifndef PRAGMA_WARNING_DISABLE
+#  ifdef _MSC_VER
+#    define PRAGMA_WARNING_DISABLE(x) PRAGMA(warning(disable : x))
+#  else
+#    define PRAGMA_WARNING_DISABLE(x)
+#  endif
+#endif
+
+#ifndef ZERO_SIZE_ARRAY_SUPPORTED
+#  define ZERO_SIZE_ARRAY_SUPPORTED 1
+#endif
+
+#ifndef ZERO_SIZE_ARRAY
+#  if ZERO_SIZE_ARRAY_SUPPORTED
+#    define ZERO_SIZE_ARRAY(type, name) type name[0]
+#  else
+#    define ZERO_SIZE_ARRAY(type, name)
+#  endif
+#endif
 
 template <typename T>
 inline void delete_ptr(T*& _ptr)
@@ -115,7 +157,7 @@ TEST_CASE("apply_callback", "[lambda]")
     REQUIRE(x == 1);
 }
 
-TEST_CASE("memset", "mem")
+TEST_CASE("memset", "[mem]")
 {
     std::vector<std::uint8_t> v8(8, 1);
     SPDLOG_INFO("v: {}", spdlog::to_hex(v8));
@@ -131,7 +173,7 @@ TEST_CASE("memset", "mem")
     REQUIRE(v32 == v32a);
 }
 
-TEST_CASE("memcpy", "mem")
+TEST_CASE("memcpy", "[mem]")
 {
     std::vector<std::uint8_t> v8(64, 0);
     auto v8a = v8;
@@ -145,6 +187,53 @@ TEST_CASE("memcpy", "mem")
     std::copy_n(v32.data(), v32.size(), (std::uint32_t*)v8a.data());
     SPDLOG_INFO("v: {}", spdlog::to_hex(v8));
     REQUIRE(v8 == v8a);
+}
+
+namespace zero_size_array
+{
+    struct A
+    {
+        std::uint8_t data[8];
+    };
+
+    PRAGMA_WARNING_PUSH();
+    PRAGMA_WARNING_DISABLE(4200);
+    struct B
+    {
+        std::uint8_t data[8];
+        ZERO_SIZE_ARRAY(std::byte, a);
+    };
+    PRAGMA_WARNING_POP();
+
+    std::byte* B_a(B* _self)
+    {
+#if ZERO_SIZE_ARRAY_SUPPORTED
+        return _self->a;
+#else
+        return (std::byte*)_self + sizeof(B);
+#endif
+    }
+} // namespace zero_size_array
+
+// 柔性數組
+TEST_CASE("zero size array", "[struct]")
+{
+    namespace z = zero_size_array;
+
+    // 柔性數組本身不佔用空間，但是如果它是結構的最後一個成員，
+    // 那麼結構的大小就會包含柔性數組的大小。
+    // 因此，sizeof(A)和sizeof(B)的大小是相同的。
+    REQUIRE(sizeof(z::A) == sizeof(z::B));
+
+    // 柔性數組可以用於動態分配內存，
+    // 因為它的大小是在運行時決定的。
+    auto size = 8u;
+    auto d = (z::B*)malloc(sizeof(z::B) + size);
+    BOOST_SCOPE_DEFER[&]
+    {
+        free(d);
+    };
+    std::fill_n(z::B_a(d), size, std::byte{0x01});
 }
 
 int main(int _argc, char* _argv[])
