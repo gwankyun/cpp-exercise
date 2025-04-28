@@ -236,6 +236,57 @@ TEST_CASE("zero size array", "[struct]")
     std::fill_n(z::B_a(d), size, std::byte{0x01});
 }
 
+namespace detail
+{
+    using fn = std::function<void()>;
+    // fn move_construct = [] {
+    //     SPDLOG_INFO("move Object: {}", _other.id);
+    // };
+    fn move_assign;
+    fn copy_construct;
+    fn copy_assign;
+    fn destruct;
+    fn construct;
+}
+
+struct Object
+{
+    Object()
+    {
+        SPDLOG_INFO("create Object");
+    }
+    ~Object() noexcept
+    {
+        SPDLOG_INFO("destroy Object: {}", id);
+    }
+    Object(const Object& _other)
+    {
+        SPDLOG_INFO("copy Object: {}", _other.id);
+    }
+    Object& operator=(const Object& _other)
+    {
+        SPDLOG_INFO("assign Object: {}", _other.id);
+    }
+    Object(Object&& _other) noexcept
+    {
+        SPDLOG_INFO("move Object: {}", _other.id);
+    }
+    Object& operator=(Object&&) noexcept
+    {
+        SPDLOG_INFO("move assign Object");
+    }
+    int id = 0;
+};
+
+TEST_CASE("Object", "[class]")
+{
+    Object obj;
+    obj.id = 1;
+    Object obj2 = obj;
+    obj2.id = 2;
+    Object obj3(std::move(obj2));
+}
+
 int main(int _argc, char* _argv[])
 {
     std::string log_format{"[%C-%m-%d %T.%e] [%^%L%$] [%-20!!:%4#] %v"};

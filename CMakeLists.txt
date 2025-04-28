@@ -56,6 +56,14 @@ target_sources(${main} PRIVATE
 target_link_libraries(${main} PRIVATE spdlog::spdlog Boost::scope Catch2::Catch2)
 target_compile_features(${main} PRIVATE cxx_std_23)
 
+set(boost_example boost_example)
+add_executable(${boost_example})
+target_sources(${boost_example} PRIVATE
+  src/boost_example.cpp
+)
+target_link_libraries(${boost_example} PRIVATE Boost::scope Catch2::Catch2)
+target_compile_features(${boost_example} PRIVATE cxx_std_23)
+
 set(intrusive_container intrusive_container)
 add_executable(${intrusive_container})
 target_sources(${intrusive_container} PRIVATE
@@ -105,3 +113,11 @@ target_sources(${tree_example} PRIVATE
 )
 target_link_libraries(${tree_example} PRIVATE spdlog::spdlog Boost::scope Catch2::Catch2)
 target_compile_features(${tree_example} PRIVATE cxx_std_23)
+
+set(list_example list_example)
+add_executable(${list_example})
+target_sources(${list_example} PRIVATE
+  src/list_example.cpp
+)
+target_link_libraries(${list_example} PRIVATE spdlog::spdlog Boost::scope Catch2::Catch2)
+target_compile_features(${list_example} PRIVATE cxx_std_23)
