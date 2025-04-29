@@ -35,32 +35,87 @@ struct List
     {
         auto new_node = new ListNode<T>;
         new_node->value = _value;
-        new_node->next = _node->next;
-        new_node->prev = _node;
-        _node->next = new_node;
+        if (_node != nullptr)
+        {
+            new_node->next = _node->next;
+            new_node->prev = _node;
+            _node->next = new_node;
+        }
         size++;
+        return new_node;
+    }
 
+    ListNode<T>* insert_front(ListNode<T>* _node, T _value)
+    {
+        auto new_node = new ListNode<T>;
+        new_node->value = _value;
+        if (_node!= nullptr)
+        {
+            new_node->next = _node;
+            new_node->prev = _node->prev;
+            _node->prev = new_node;
+        }
+        size++;
         return new_node;
     }
 
     ListNode<T>* push_back(T _value)
     {
-        auto new_node = new ListNode<T>;
-        new_node->value = _value;
+        ListNode<T>* new_node = nullptr;
         if (head == nullptr)
         {
+            new_node = insert_back(nullptr, _value);
+            head = new_node;
+        }
+        else
+        {
+            new_node = insert_back(tail, _value);
+        }
+        tail = new_node;
+
+        return new_node;
+    }
+
+    ListNode<T>* push_front(T _value)
+    {
+        ListNode<T>* new_node = nullptr;
+        if (head == nullptr)
+        {
+            new_node = insert_front(nullptr, _value);
             head = new_node;
             tail = new_node;
         }
         else
         {
-            tail->next = new_node;
-            new_node->prev = tail;
-            tail = new_node;
+            new_node = insert_front(head, _value);
+            head = new_node;
+            if (size == 1)
+            {
+                tail = new_node;
+            }
         }
-        size++;
 
         return new_node;
+    }
+
+    void erase(ListNode<T>* _node)
+    {
+        if (_node == nullptr)
+        {
+            return;
+        }
+        auto prev = _node->prev;
+        auto next = _node->next;
+        if (prev != nullptr)
+        {
+            prev->next = next;
+        }
+        if (next != nullptr)
+        {
+            next->prev = prev;
+        }
+        delete _node;
+        size--;
     }
 
     void pop_back()
@@ -69,10 +124,16 @@ struct List
         {
             return; 
         }
-        tail = tail->prev;
-        delete tail->next;
-        tail->next = nullptr;
-        size--;
+        auto next = tail->next;
+        erase(tail);
+        if (size == 1)
+        {
+            tail = head;
+        }
+        else
+        {
+            tail = next;
+        }
     }
 
     std::vector<T> to_vector() const
@@ -97,12 +158,23 @@ TEST_CASE("List", "[push_back]")
     REQUIRE(list.to_vector() == std::vector<int>{1, 2, 3});
 }
 
+TEST_CASE("List", "[push_front]")
+{
+    List<int> list;
+    list.push_front(1);
+    list.push_front(2);
+    list.push_front(3);
+    REQUIRE(list.to_vector() == std::vector<int>{3, 2, 1});
+}
+
 TEST_CASE("List", "[pop_back]")
 {
     List<int> list;
     list.push_back(1);
     list.push_back(2);
+    REQUIRE(list.to_vector() == std::vector<int>{1, 2});
     list.pop_back();
+    REQUIRE(list.to_vector() == std::vector<int>{1});
     list.push_back(3);
     REQUIRE(list.to_vector() == std::vector<int>{1, 3});
 }
