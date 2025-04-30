@@ -5,7 +5,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <spdlog/spdlog.h>
 
-template<typename T>
+template <typename T>
 struct ListNode
 {
     T value;
@@ -13,7 +13,7 @@ struct ListNode
     ListNode* prev = nullptr;
 };
 
-template<typename T>
+template <typename T>
 struct List
 {
     ListNode<T>* head = nullptr;
@@ -31,15 +31,30 @@ struct List
         }
     }
 
+    void connect(ListNode<T>* _prev, ListNode<T>* _next)
+    {
+        if (_prev != nullptr || _next != nullptr)
+        {
+            return;
+        }
+        _prev->next = _next;
+        _next->prev = _prev;
+    }
+
     ListNode<T>* insert_back(ListNode<T>* _node, T _value)
     {
         auto new_node = new ListNode<T>;
         new_node->value = _value;
         if (_node != nullptr)
         {
-            new_node->next = _node->next;
+            auto next = _node->next;
             new_node->prev = _node;
             _node->next = new_node;
+            new_node->next = next;
+            if (next != nullptr)
+            {
+                next->prev = new_node;
+            }
         }
         size++;
         return new_node;
@@ -49,10 +64,15 @@ struct List
     {
         auto new_node = new ListNode<T>;
         new_node->value = _value;
-        if (_node!= nullptr)
+        if (_node != nullptr)
         {
+            auto prev = _node->prev;
             new_node->next = _node;
-            new_node->prev = _node->prev;
+            new_node->prev = prev;
+            if (prev != nullptr)
+            {
+                prev->next = new_node;
+            }
             _node->prev = new_node;
         }
         size++;
@@ -78,21 +98,11 @@ struct List
 
     ListNode<T>* push_front(T _value)
     {
-        ListNode<T>* new_node = nullptr;
-        if (head == nullptr)
+        auto new_node = insert_front(head, _value);
+        head = new_node;
+        if (size == 1)
         {
-            new_node = insert_front(nullptr, _value);
-            head = new_node;
             tail = new_node;
-        }
-        else
-        {
-            new_node = insert_front(head, _value);
-            head = new_node;
-            if (size == 1)
-            {
-                tail = new_node;
-            }
         }
 
         return new_node;
@@ -122,7 +132,7 @@ struct List
     {
         if (tail == nullptr)
         {
-            return; 
+            return;
         }
         auto next = tail->next;
         erase(tail);
@@ -140,7 +150,7 @@ struct List
     {
         std::vector<T> result;
         auto current = head;
-        while (current!= nullptr)
+        while (current != nullptr)
         {
             result.push_back(current->value);
             current = current->next;
@@ -148,6 +158,29 @@ struct List
         return result;
     }
 };
+
+TEST_CASE("List", "[insert_front]")
+{
+    List<int> list;
+    list.push_back(1);
+    auto note2 = list.push_back(2);
+    list.push_back(3);
+    REQUIRE(list.to_vector() == std::vector<int>{1, 2, 3});
+
+    list.insert_front(note2, 4);
+    REQUIRE(list.to_vector() == std::vector<int>{1, 4, 2, 3});
+}
+
+TEST_CASE("List", "[insert_back]")
+{
+    List<int> list;
+    list.push_back(1);
+    auto note2 = list.push_back(2);
+    list.push_back(3);
+
+    list.insert_back(note2, 4);
+    REQUIRE(list.to_vector() == std::vector<int>{1, 2, 4, 3});
+}
 
 TEST_CASE("List", "[push_back]")
 {

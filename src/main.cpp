@@ -177,7 +177,7 @@ TEST_CASE("memcpy", "[mem]")
 {
     std::vector<std::uint8_t> v8(64, 0);
     auto v8a = v8;
-    SPDLOG_INFO("v: {}", spdlog::to_hex(v8));
+    // SPDLOG_INFO("v: {}", spdlog::to_hex(v8));
     std::vector<std::uint32_t> v32(4, 1);
 
     memcpy(v8.data(),                         // 目標
@@ -185,7 +185,7 @@ TEST_CASE("memcpy", "[mem]")
            v32.size() * sizeof(std::uint32_t) // 以字節為單位的長度
     );
     std::copy_n(v32.data(), v32.size(), (std::uint32_t*)v8a.data());
-    SPDLOG_INFO("v: {}", spdlog::to_hex(v8));
+    // SPDLOG_INFO("v: {}", spdlog::to_hex(v8));
     REQUIRE(v8 == v8a);
 }
 
@@ -242,49 +242,162 @@ namespace detail
     // fn move_construct = [] {
     //     SPDLOG_INFO("move Object: {}", _other.id);
     // };
+    fn move_construct;
     fn move_assign;
     fn copy_construct;
     fn copy_assign;
     fn destruct;
     fn construct;
+    int count = 0;
 }
+
+// struct Object
+// {
+//     Object()
+//     {
+//         SPDLOG_INFO("create Object");
+//     }
+//     ~Object() noexcept
+//     {
+//         SPDLOG_INFO("destroy Object: {}", id);
+//     }
+//     Object(const Object& _other)
+//     {
+//         SPDLOG_INFO("copy Object: {}", _other.id);
+//     }
+//     Object& operator=(const Object& _other)
+//     {
+//         SPDLOG_INFO("assign Object: {}", _other.id);
+//     }
+//     Object(Object&& _other) noexcept
+//     {
+//         SPDLOG_INFO("move Object: {}", _other.id);
+//     }
+//     Object& operator=(Object&&) noexcept
+//     {
+//         SPDLOG_INFO("move assign Object");
+//     }
+//     int id = 0;
+// };
+
+// TEST_CASE("Object", "[class]")
+// {
+//     Object obj;
+//     obj.id = 1;
+//     Object obj2 = obj;
+//     obj2.id = 2;
+//     Object obj3(std::move(obj2));
+// }
 
 struct Object
 {
-    Object()
-    {
-        SPDLOG_INFO("create Object");
-    }
-    ~Object() noexcept
-    {
-        SPDLOG_INFO("destroy Object: {}", id);
-    }
+    /// @brief 構造函數
+    Object() = default;
+    /// @brief 析構函數
+    ~Object() noexcept = default;
+    /// @brief 複製構造函數
     Object(const Object& _other)
+        : value(_other.value)
     {
-        SPDLOG_INFO("copy Object: {}", _other.id);
+        SPDLOG_INFO("copy Object");
+        detail::copy_construct();
     }
+    /// @brief 複製賦值
     Object& operator=(const Object& _other)
     {
-        SPDLOG_INFO("assign Object: {}", _other.id);
+        SPDLOG_INFO("assign Object");
+        value = _other.value;
+        detail::copy_assign();
+        return *this;
     }
+    /// @brief 移動構造函數
     Object(Object&& _other) noexcept
+        : value(_other.value)
     {
-        SPDLOG_INFO("move Object: {}", _other.id);
+        SPDLOG_INFO("move Object");
+        detail::move_construct();
     }
-    Object& operator=(Object&&) noexcept
+    /// @brief 移動賦值
+    Object& operator=(Object&& _other) noexcept
     {
         SPDLOG_INFO("move assign Object");
+        value = _other.value;
+        detail::move_assign();
+        return *this;
     }
-    int id = 0;
+    int value = 0;
 };
 
-TEST_CASE("Object", "[class]")
+Object fn()
 {
     Object obj;
-    obj.id = 1;
-    Object obj2 = obj;
-    obj2.id = 2;
-    Object obj3(std::move(obj2));
+    obj.value = 1;
+    return obj;
+}
+
+TEST_CASE("Object", "[move]")
+{
+    // assert(detail::count == 1);
+    // auto obj = fn();
+    Object obj;
+
+    auto cc = 0;
+    detail::copy_construct = [&]
+    {
+        cc++;
+    };
+
+    auto obj2 = obj;
+    REQUIRE(cc == 1);
+
+    // detail::copy_construct = [&]
+    // {
+    //     SPDLOG_INFO("copy construct");
+    // };
+
+    auto ca = 0;
+    detail::copy_assign = [&]
+    {
+        ca++;
+        SPDLOG_INFO("copy assign");
+    };
+
+    auto mc = 0;
+    detail::move_construct = [&]
+    {
+        mc++;
+        SPDLOG_INFO("move construct");
+    };
+
+    auto ma = 0;
+    detail::move_assign = [&]
+    {
+        ma++;
+        SPDLOG_INFO("move assign");
+    };
+
+    auto obj3 = std::move(obj2);
+    obj3.value++;
+    SPDLOG_INFO("obj3.value: {}", obj3.value);
+    REQUIRE(mc == 1);
+
+    // auto fn = []
+    // {
+    //     Object obj;
+    //     SPDLOG_INFO("obj.value: {}", obj.value);
+    //     return obj;
+    // };
+    // ca = 0;
+    // cc = 0;
+    // mc = 0;
+    // ma = 0;
+    // auto obj4 = fn();
+    // SPDLOG_INFO("obj4.value: {}", obj4.value);
+    // CHECK(cc == 1);
+    // CHECK(ca == 1);
+    // CHECK(ma == 1);
+    // CHECK(mc == 1);
+    // REQUIRE(mc == 1);
 }
 
 int main(int _argc, char* _argv[])
