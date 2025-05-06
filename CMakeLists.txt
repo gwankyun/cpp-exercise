@@ -102,22 +102,8 @@ add_subdirectory(uv)
 
 find_path(DYLIB_INCLUDE_DIRS "dylib.hpp")
 
-add_subdirectory(shared_library)
+add_subdirectory(use_library)
 
 add_subdirectory(module)
 
-set(tree_example tree_example)
-add_executable(${tree_example})
-target_sources(${tree_example} PRIVATE
-  src/tree_example.cpp
-)
-target_link_libraries(${tree_example} PRIVATE spdlog::spdlog Boost::scope Catch2::Catch2)
-target_compile_features(${tree_example} PRIVATE cxx_std_23)
-
-set(list_example list_example)
-add_executable(${list_example})
-target_sources(${list_example} PRIVATE
-  src/list_example.cpp
-)
-target_link_libraries(${list_example} PRIVATE spdlog::spdlog Boost::scope Catch2::Catch2)
-target_compile_features(${list_example} PRIVATE cxx_std_23)
+add_subdirectory(data_structure)

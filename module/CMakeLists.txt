@@ -1,5 +1,8 @@
 ﻿set(CMAKE_FOLDER module)
 
+set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD ON)
+cmake_print_variables(CMAKE_CXX_COMPILER_IMPORT_STD)
+
 set(module_main module_main)
 add_executable(${module_main})
 target_sources(${module_main} PRIVATE

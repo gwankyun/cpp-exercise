@@ -11,11 +11,69 @@ namespace shared_lib
 #include "../include/shared_lib.h"
 }
 
+#include "../include/static_lib.h"
+
 namespace fs = std::filesystem;
 
-TEST_CASE("void* and any", "[ptr]")
+TEST_CASE("shared_ptr", "[shared_ptr]")
 {
-    auto dll_path = fs::current_path() / "bin/shared_lib.dll";
+    namespace sl = shared_lib;
+
+    REQUIRE(sl::add(1, 2) == 3);
+
+    {
+        sl::Point pt;
+        sl::Point_init(&pt);
+        REQUIRE((pt.x == 0 && pt.y == 0));
+    }
+
+    {
+        sl::Point pt1;
+        sl::Point_init(&pt1);
+
+        sl::Point pt2;
+        sl::Point_init(&pt2);
+        pt2.x = 3;
+        pt2.y = 4;
+
+        auto dist = sl::Point_distance(&pt1, &pt2);
+        REQUIRE(static_cast<int>(dist) == 5);
+    }
+
+    {
+        int v = 0;
+        sl::set_int(&v, 1);
+        REQUIRE(v == 1);
+    }
+
+    {
+        char* str = nullptr;
+        sl::set_char_p(&str, "123");
+        REQUIRE(memcmp(str, "123", 3) == 0);
+    }
+
+    {
+        sl::Point pt;
+        sl::set_struct(&pt, 3, 4);
+        REQUIRE((pt.x == 3 && pt.y == 4));
+    }
+
+    {
+        int a[10];
+        sl::set_array(a, 3, 4);
+        REQUIRE(a[3] == 4);
+    }
+}
+
+TEST_CASE("static_lib", "[static_lib]")
+{
+    REQUIRE(static_lib::get_info() == "static lib");
+}
+
+TEST_CASE("module_lib", "[dylib]")
+{
+    auto dll_path = fs::current_path() / "module_lib.dll";
+    SPDLOG_INFO("dll_path: {}", dll_path.string());
     CHECK(fs::exists(dll_path));
 
     dylib lib(dll_path);
