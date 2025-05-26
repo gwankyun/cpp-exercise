@@ -2,5 +2,5 @@
 
 export
 {
-    int main();
+    int main(int _argc, char* _argv[]);
 }

@@ -13,5 +13,5 @@ target_sources(${module_main}
     src/main.ixx
     src/a.ixx
 )
-target_link_libraries(${module_main} PRIVATE spdlog::spdlog)
+target_link_libraries(${module_main} PRIVATE spdlog::spdlog Catch2::Catch2)
 target_compile_features(${module_main} PRIVATE cxx_std_23)
