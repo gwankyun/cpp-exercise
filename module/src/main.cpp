@@ -1,14 +1,6 @@
-module;
-#ifdef __INTELLISENSE__
-#  include "a.h"
-#  include <print>
-#endif
-
 module main;
-#ifndef __INTELLISENSE__
 import std;
 import a;
-#endif
 
 int main()
 {

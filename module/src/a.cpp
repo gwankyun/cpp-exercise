@@ -1,12 +1,5 @@
-module;
-#ifdef __INTELLISENSE__
-#  include "a.h"
-#endif
-
 module a;
-#ifndef __INTELLISENSE__
 import std;
-#endif
 
 namespace a
 {
@@ -19,4 +12,4 @@ namespace a
     {
         return "module a";
     }
-} // namespace m
+} // namespace a
