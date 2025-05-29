@@ -1,19 +1,9 @@
-﻿#include <cassert>
-#include <cstddef>
-#include <cstdint>
-#include <cstdlib>
-
-#include <algorithm>
-#include <any>
-#include <functional>
-#include <memory>
+﻿module;
 
 #include <boost/scope/defer.hpp>
 #include <boost/scope/scope_exit.hpp>
 #include <catch2/../catch2/catch_session.hpp>
 #include <catch2/catch_test_macros.hpp>
-#include <spdlog/fmt/bin_to_hex.h>
-#include <spdlog/spdlog.h>
 
 #ifndef PRAGMA_SUPPORTED
 #  define PRAGMA_SUPPORTED 1
@@ -55,6 +45,10 @@
 #  endif
 #endif
 
+module main;
+import std;
+import spdlog;
+
 template <typename T>
 inline void delete_ptr(T*& _ptr)
 {
@@ -92,7 +86,7 @@ TEST_CASE("void* and any", "[ptr]")
     void* obj_void_p = new Object(
         [&]
         {
-            SPDLOG_INFO("void*");
+            spdlog_module::get().info("void*");
             destroy.void_p = true;
         });
 
@@ -102,7 +96,7 @@ TEST_CASE("void* and any", "[ptr]")
         auto obj_any = std::make_any<Object>(
             [&]
             {
-                SPDLOG_INFO("any");
+                spdlog_module::get().info("any");
                 destroy.any = true;
             });
 
@@ -117,7 +111,7 @@ TEST_CASE("void* and any", "[ptr]")
         auto unique = [&](int* _ptr)
         {
             delete _ptr;
-            SPDLOG_INFO("unique_ptr");
+            spdlog_module::get().info("unique_ptr");
             destroy.unique = true;
         };
         std::unique_ptr<int, decltype(unique)> ptr(new int(0), unique);
@@ -160,7 +154,7 @@ TEST_CASE("apply_callback", "[lambda]")
 TEST_CASE("memset", "[mem]")
 {
     std::vector<std::uint8_t> v8(8, 1);
-    SPDLOG_INFO("v: {}", spdlog::to_hex(v8));
+    //spdlog_module::get().info("v: {}", spdlog::to_hex(v8));
 
     std::vector<std::uint32_t> v32(8, 1);
     auto v32a = v32;
@@ -169,7 +163,7 @@ TEST_CASE("memset", "[mem]")
            v32.size() * sizeof(std::uint32_t) // 以字節為單位的長度
     );
     std::fill_n(v32a.begin(), v32a.size(), 0);
-    SPDLOG_INFO("v32: {}", spdlog::to_hex(v32.begin(), v32.end()));
+    //spdlog_module::get().info("v32: {}", spdlog::to_hex(v32.begin(), v32.end()));
     REQUIRE(v32 == v32a);
 }
 
@@ -178,6 +172,7 @@ TEST_CASE("memcpy", "[mem]")
     std::vector<std::uint8_t> v8(64, 0);
     auto v8a = v8;
     // SPDLOG_INFO("v: {}", spdlog::to_hex(v8));
+    //spdlog_module::get().info("v: {}", spdlog_module::to_hex(v8));
     std::vector<std::uint32_t> v32(4, 1);
 
     memcpy(v8.data(),                         // 目標
@@ -249,7 +244,7 @@ namespace detail
     fn destruct;
     fn construct;
     int count = 0;
-}
+} // namespace detail
 
 // struct Object
 // {
@@ -296,31 +291,29 @@ struct Object
     /// @brief 析構函數
     ~Object() noexcept = default;
     /// @brief 複製構造函數
-    Object(const Object& _other)
-        : value(_other.value)
+    Object(const Object& _other) : value(_other.value)
     {
-        SPDLOG_INFO("copy Object");
+        spdlog_module::get().info("copy Object");
         detail::copy_construct();
     }
     /// @brief 複製賦值
     Object& operator=(const Object& _other)
     {
-        SPDLOG_INFO("assign Object");
+        spdlog_module::get().info("assign Object");
         value = _other.value;
         detail::copy_assign();
         return *this;
     }
     /// @brief 移動構造函數
-    Object(Object&& _other) noexcept
-        : value(_other.value)
+    Object(Object&& _other) noexcept : value(_other.value)
     {
-        SPDLOG_INFO("move Object");
+        spdlog_module::get().info("move Object");
         detail::move_construct();
     }
     /// @brief 移動賦值
     Object& operator=(Object&& _other) noexcept
     {
-        SPDLOG_INFO("move assign Object");
+        spdlog_module::get().info("move assign Object");
         value = _other.value;
         detail::move_assign();
         return *this;
@@ -342,10 +335,7 @@ TEST_CASE("Object", "[move]")
     Object obj;
 
     auto cc = 0;
-    detail::copy_construct = [&]
-    {
-        cc++;
-    };
+    detail::copy_construct = [&] { cc++; };
 
     auto obj2 = obj;
     REQUIRE(cc == 1);
@@ -359,26 +349,26 @@ TEST_CASE("Object", "[move]")
     detail::copy_assign = [&]
     {
         ca++;
-        SPDLOG_INFO("copy assign");
+        spdlog_module::get().info("copy assign");
     };
 
     auto mc = 0;
     detail::move_construct = [&]
     {
         mc++;
-        SPDLOG_INFO("move construct");
+        spdlog_module::get().info("move construct");
     };
 
     auto ma = 0;
     detail::move_assign = [&]
     {
         ma++;
-        SPDLOG_INFO("move assign");
+        spdlog_module::get().info("move assign");
     };
 
     auto obj3 = std::move(obj2);
     obj3.value++;
-    SPDLOG_INFO("obj3.value: {}", obj3.value);
+    spdlog_module::get().info("obj3.value: {}", obj3.value);
     REQUIRE(mc == 1);
 
     // auto fn = []
@@ -400,12 +390,44 @@ TEST_CASE("Object", "[move]")
     // REQUIRE(mc == 1);
 }
 
+TEST_CASE("set", "[algorithm]")
+{
+    namespace ranges = std::ranges;
+    using SetType = std::set<int>;
+    SetType v1{1, 2, 3, 4};
+    SetType v2{3, 7, 2, 1};
+
+    SetType v1_v2;
+    // v1 - v2
+    ranges::set_difference(v1, v2, std::inserter(v1_v2, v1_v2.begin()));
+    REQUIRE(v1_v2 == SetType{4});
+
+    SetType v2_v1;
+    // v2 - v1
+    ranges::set_difference(v2, v1, std::inserter(v2_v1, v2_v1.begin()));
+    REQUIRE(v2_v1 == SetType{7});
+}
+
+void log(const std::string_view _message,
+    const std::source_location location = std::source_location::current())
+{
+    std::print("[{}:{}] {}\n", location.function_name(), location.line(), _message);
+}
+
 int main(int _argc, char* _argv[])
 {
-    std::string log_format{"[%C-%m-%d %T.%e] [%^%L%$] [%-20!!:%4#] %v"};
-    spdlog::set_pattern(log_format);
+    //std::string log_format{"[%C-%m-%d %T.%e] [%^%L%$] [%-20!!:%4#] %v"};
+    std::string log_format{"[%C-%m-%d %T.%e] [%^%L%$] %v"};
+    spdlog_module::set_pattern(log_format);
 
-    SPDLOG_INFO("__cplusplus: {}", __cplusplus);
+    spdlog_module::get().info("__cplusplus: {}", __cplusplus);
+
+    log(std::format(""));
+
+    spdlog_module::get().warn("{}", "hello");
+    spdlog_module::get().info("{} + {} = {}", 1, 2, 3);
+
+    spdlog_module::info("info");
 
     auto result = Catch::Session().run(_argc, _argv);
     return result;

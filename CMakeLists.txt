@@ -14,6 +14,9 @@ cmake_print_variables(PROJECT_IS_TOP_LEVEL)
 cmake_print_variables(CMAKE_SOURCE_DIR)
 cmake_print_variables(CMAKE_CURRENT_SOURCE_DIR)
 
+# 掃描模塊
+set(CMAKE_CXX_SCAN_FOR_MODULES ON)
+
 # 輸出目錄
 set(source_dir ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -46,15 +49,42 @@ list(APPEND msvc_options "/experimental:module")
 # 柔性數組
 list(APPEND msvc_options "/Zc:zeroSizeArrayNew")
 
+list(APPEND msvc_options "/utf-8")
+
 add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:${msvc_options}>")
+
+add_subdirectory(module)
+
+set(spdlog_module spdlog_module)
+add_library(${spdlog_module})
+target_sources(${spdlog_module}
+  PRIVATE FILE_SET CXX_MODULES FILES
+    include/spdlog.ixx)
+target_link_libraries(${spdlog_module} PUBLIC spdlog::spdlog)
+target_compile_features(${spdlog_module} PRIVATE cxx_std_23)
+set_target_properties(${spdlog_module} PROPERTIES FOLDER module)
+
+set(catch2_module catch2_module)
+add_library(${catch2_module})
+target_sources(${catch2_module}
+  PRIVATE FILE_SET CXX_MODULES FILES
+    include/catch2.ixx)
+target_link_libraries(${catch2_module} PUBLIC Catch2::Catch2)
+target_compile_features(${catch2_module} PRIVATE cxx_std_23)
+set_target_properties(${catch2_module} PROPERTIES FOLDER module)
 
 set(main main)
 add_executable(${main})
-target_sources(${main} PRIVATE
-  src/main.cpp
+target_sources(${main}
+  PRIVATE
+    src/main.cpp
+  PRIVATE FILE_SET CXX_MODULES FILES
+    src/main.ixx
 )
-target_link_libraries(${main} PRIVATE spdlog::spdlog Boost::scope Catch2::Catch2)
+target_link_libraries(${main} PRIVATE Boost::scope Catch2::Catch2 ${spdlog_module})
 target_compile_features(${main} PRIVATE cxx_std_23)
+
+set(other other)
 
 set(boost_example boost_example)
 add_executable(${boost_example})
@@ -63,6 +93,17 @@ target_sources(${boost_example} PRIVATE
 )
 target_link_libraries(${boost_example} PRIVATE Boost::scope Catch2::Catch2)
 target_compile_features(${boost_example} PRIVATE cxx_std_23)
+set_target_properties(${boost_example} PROPERTIES FOLDER ${other})
+
+find_package(doctest CONFIG REQUIRED)
+set(doctest_example doctest_example)
+add_executable(${doctest_example})
+target_sources(${doctest_example} PRIVATE
+  src/doctest_example.cpp
+)
+target_link_libraries(${doctest_example} PRIVATE doctest::doctest)
+target_compile_features(${doctest_example} PRIVATE cxx_std_23)
+set_target_properties(${doctest_example} PROPERTIES FOLDER ${other})
 
 set(intrusive_container intrusive_container)
 add_executable(${intrusive_container})
@@ -86,6 +127,7 @@ if((TARGET hello-imgui::hello_imgui) AND(TARGET nlohmann_json::nlohmann_json))
     nlohmann_json::nlohmann_json
   )
   target_compile_features(${hello_imgui_example} PRIVATE cxx_std_20)
+  set_target_properties(${hello_imgui_example} PROPERTIES FOLDER ${other})
 endif()
 
 if(TARGET msft_proxy)
@@ -96,6 +138,7 @@ if(TARGET msft_proxy)
   )
   target_link_libraries(${proxy_example} PRIVATE spdlog::spdlog msft_proxy)
   target_compile_features(${proxy_example} PRIVATE cxx_std_20)
+  set_target_properties(${proxy_example} PROPERTIES FOLDER ${other})
 endif()
 
 add_subdirectory(uv)
@@ -104,6 +147,6 @@ find_path(DYLIB_INCLUDE_DIRS "dylib.hpp")
 
 add_subdirectory(use_library)
 
-add_subdirectory(module)
-
 add_subdirectory(data_structure)
+
+add_subdirectory(ut)

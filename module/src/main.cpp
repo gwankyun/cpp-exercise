@@ -1,19 +1,34 @@
-module;
-#include <catch2/../catch2/catch_session.hpp>
-#include <catch2/catch_test_macros.hpp>
+﻿module;
+#include "../../include/catch2_macro.h"
 
 module main;
 import std;
 import a;
+import catch2;
+import spdlog;
 
-TEST_CASE("main", "[main]")
+namespace catch2 = catch2_module;
+
+void test_add()
 {
     REQUIRE(a::add(1, 2) == 3);
-    REQUIRE(a::get_info() == "module a");
+    CHECK(false);
+    REQUIRE(a::add(1, 2) == 4);
+}
+
+void test_vector()
+{
+    std::vector<int> vec{1, 2, 3};
+    REQUIRE(vec.size() == 3);
+    vec.push_back(4);
+    REQUIRE(vec.size() == 4);
 }
 
 int main(int _argc, char* _argv[])
 {
-    auto result = Catch::Session().run(_argc, _argv);
+    spdlog_module::info("module test");
+    auto a = catch2::regist(&test_add, "a", "[a]");
+    auto vec = catch2::regist(&test_vector, "vec", "[vec]");
+    auto result = catch2::run(_argc, _argv);
     return result;
 }
