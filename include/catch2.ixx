@@ -25,8 +25,11 @@ export namespace catch2
                 Catch::StringRef(_message), Catch::ResultDisposition::Normal);
             try
             {
-                __pragma(warning(push)) catchAssertionHandler.handleExpr(Catch::Decomposer() <= _expression);
-                __pragma(warning(pop))
+                CATCH_INTERNAL_START_WARNINGS_SUPPRESSION
+                CATCH_INTERNAL_SUPPRESS_GLOBALS_WARNINGS
+                CATCH_INTERNAL_SUPPRESS_UNUSED_VARIABLE_WARNINGS
+                catchAssertionHandler.handleExpr(Catch::Decomposer() <= _expression);
+                CATCH_INTERNAL_STOP_WARNINGS_SUPPRESSION
             }
             catch (...)
             {
@@ -47,8 +50,10 @@ export namespace catch2
                 Catch::StringRef(_message), Catch::ResultDisposition::ContinueOnFailure);
             try
             {
-                __pragma(warning(push)) catchAssertionHandler.handleExpr(Catch::Decomposer() <= _expression);
-                __pragma(warning(pop))
+                CATCH_INTERNAL_START_WARNINGS_SUPPRESSION
+                CATCH_INTERNAL_SUPPRESS_PARENTHESES_WARNINGS
+                catchAssertionHandler.handleExpr(Catch::Decomposer() <= _expression);
+                CATCH_INTERNAL_STOP_WARNINGS_SUPPRESSION
             }
             catch (...)
             {
@@ -58,13 +63,27 @@ export namespace catch2
         } while ((void)0, (false) && static_cast<const bool&>(!!(_expression)));
     }
 
-    std::unique_ptr<Catch::AutoReg> regist(void (*_fn)(), std::string _name, std::string _tags,
-                                           std::source_location _location = std::source_location::current())
+    using TestCase = std::shared_ptr<Catch::AutoReg>;
+
+    TestCase test_case(std::string _name, std::string _tags, void (*_fn)(),
+                                              std::source_location _location = std::source_location::current())
     {
-        auto autoRegistrar = std::make_unique<Catch::AutoReg>(
+        auto autoRegistrar = std::make_shared<Catch::AutoReg>(
             Catch::makeTestInvoker(_fn),
             ::Catch::SourceLineInfo(_location.file_name(), static_cast<std::size_t>(_location.line())),
             Catch::StringRef(), Catch::NameAndTags{_name, _tags});
         return autoRegistrar;
     }
-} // namespace catch2_module
+
+    void session(std::string _message, std::function<void()> _fn, std::source_location _location = std::source_location::current())
+    {
+        CATCH_INTERNAL_START_WARNINGS_SUPPRESSION
+        CATCH_INTERNAL_SUPPRESS_UNUSED_VARIABLE_WARNINGS
+        if (Catch::Section const& catch_internal_Section = Catch::Section(
+                ::Catch::SourceLineInfo(_location.file_name(), static_cast<std::size_t>(_location.line())), _message))
+        {
+            _fn();
+        }
+        CATCH_INTERNAL_STOP_WARNINGS_SUPPRESSION
+    }
+} // namespace catch2

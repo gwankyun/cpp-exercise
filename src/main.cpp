@@ -1,53 +1,16 @@
 ﻿module;
 
-#include <boost/scope/defer.hpp>
-#include <boost/scope/scope_exit.hpp>
-#include <catch2/../catch2/catch_session.hpp>
-#include <catch2/catch_test_macros.hpp>
-
-#ifndef PRAGMA_SUPPORTED
-#  define PRAGMA_SUPPORTED 1
-#endif
-
-#ifndef PRAGMA
-#  if PRAGMA_SUPPORTED
-#    define PRAGMA(x) _Pragma(#x)
-#  else
-#    define PRAGMA(x) __pragma(x)
-#  endif
-#endif
-
-#ifndef PRAGMA_WARNING_PUSH
-#  define PRAGMA_WARNING_PUSH() PRAGMA(warning(push))
-#endif
-
-#ifndef PRAGMA_WARNING_POP
-#  define PRAGMA_WARNING_POP() PRAGMA(warning(pop))
-#endif
-
-#ifndef PRAGMA_WARNING_DISABLE
-#  ifdef _MSC_VER
-#    define PRAGMA_WARNING_DISABLE(x) PRAGMA(warning(disable : x))
-#  else
-#    define PRAGMA_WARNING_DISABLE(x)
-#  endif
-#endif
-
-#ifndef ZERO_SIZE_ARRAY_SUPPORTED
-#  define ZERO_SIZE_ARRAY_SUPPORTED 1
-#endif
-
-#ifndef ZERO_SIZE_ARRAY
-#  if ZERO_SIZE_ARRAY_SUPPORTED
-#    define ZERO_SIZE_ARRAY(type, name) type name[0]
-#  else
-#    define ZERO_SIZE_ARRAY(type, name)
-#  endif
-#endif
+#include "main_macro.h"
+//#include <boost/scope/defer.hpp>
+//#include <boost/scope/scope_exit.hpp>
+#include <catch2_macro.h>
+#include <boost.scope_macro.h>
 
 module main;
 import std;
 import spdlog;
+import catch2;
+import boost.scope;
 
 template <typename T>
 inline void delete_ptr(T*& _ptr)
@@ -57,69 +20,6 @@ inline void delete_ptr(T*& _ptr)
         delete _ptr;
         _ptr = nullptr;
     }
-}
-
-TEST_CASE("void* and any", "[ptr]")
-{
-    struct Object
-    {
-        using Fn = std::function<void()>;
-        Object(Fn _fn) : fn(_fn)
-        {
-        }
-        ~Object()
-        {
-            fn();
-        }
-
-      private:
-        Fn fn;
-    };
-
-    struct Destroy
-    {
-        bool void_p = false;
-        bool any = false;
-        bool unique = false;
-    } destroy;
-
-    void* obj_void_p = new Object(
-        [&]
-        {
-            spdlog::get().info("void*");
-            destroy.void_p = true;
-        });
-
-    delete static_cast<Object*>(obj_void_p);
-
-    {
-        auto obj_any = std::make_any<Object>(
-            [&]
-            {
-                spdlog::get().info("any");
-                destroy.any = true;
-            });
-
-        auto p = std::any_cast<Object>(&obj_any);
-        if (p != nullptr)
-        {
-            static_assert(std::is_same_v<Object*, decltype(p)>);
-        }
-    }
-
-    {
-        auto unique = [&](int* _ptr)
-        {
-            delete _ptr;
-            spdlog::get().info("unique_ptr");
-            destroy.unique = true;
-        };
-        std::unique_ptr<int, decltype(unique)> ptr(new int(0), unique);
-    }
-
-    REQUIRE(destroy.void_p);
-    REQUIRE(destroy.any);
-    REQUIRE(destroy.unique);
 }
 
 typedef void (*callback)(void*);
@@ -137,52 +37,6 @@ struct Context
         static_cast<Context*>(_self)->bind();
     }
 };
-
-TEST_CASE("apply_callback", "[lambda]")
-{
-    int x = 0;
-
-    // 將lambda轉成std::function<void()>包裝到類中
-    Context context{[&] { x = 1; }};
-
-    // 通過靜態類方法將void*轉成類再調用之前保存的lambda
-    apply_callback(Context::call, &context);
-
-    REQUIRE(x == 1);
-}
-
-TEST_CASE("memset", "[mem]")
-{
-    std::vector<std::uint8_t> v8(8, 1);
-    //spdlog_module::get().info("v: {}", spdlog::to_hex(v8));
-
-    std::vector<std::uint32_t> v32(8, 1);
-    auto v32a = v32;
-    memset(v32.data(),                        // 目標
-           0,                                 // 值
-           v32.size() * sizeof(std::uint32_t) // 以字節為單位的長度
-    );
-    std::fill_n(v32a.begin(), v32a.size(), 0);
-    //spdlog_module::get().info("v32: {}", spdlog::to_hex(v32.begin(), v32.end()));
-    REQUIRE(v32 == v32a);
-}
-
-TEST_CASE("memcpy", "[mem]")
-{
-    std::vector<std::uint8_t> v8(64, 0);
-    auto v8a = v8;
-    // SPDLOG_INFO("v: {}", spdlog::to_hex(v8));
-    //spdlog_module::get().info("v: {}", spdlog_module::to_hex(v8));
-    std::vector<std::uint32_t> v32(4, 1);
-
-    memcpy(v8.data(),                         // 目標
-           v32.data(),                        // 源
-           v32.size() * sizeof(std::uint32_t) // 以字節為單位的長度
-    );
-    std::copy_n(v32.data(), v32.size(), (std::uint32_t*)v8a.data());
-    // SPDLOG_INFO("v: {}", spdlog::to_hex(v8));
-    REQUIRE(v8 == v8a);
-}
 
 namespace zero_size_array
 {
@@ -210,26 +64,174 @@ namespace zero_size_array
     }
 } // namespace zero_size_array
 
-// 柔性數組
-TEST_CASE("zero size array", "[struct]")
+namespace test
 {
-    namespace z = zero_size_array;
-
-    // 柔性數組本身不佔用空間，但是如果它是結構的最後一個成員，
-    // 那麼結構的大小就會包含柔性數組的大小。
-    // 因此，sizeof(A)和sizeof(B)的大小是相同的。
-    REQUIRE(sizeof(z::A) == sizeof(z::B));
-
-    // 柔性數組可以用於動態分配內存，
-    // 因為它的大小是在運行時決定的。
-    auto size = 8u;
-    auto d = (z::B*)malloc(sizeof(z::B) + size);
-    BOOST_SCOPE_DEFER[&]
+    void void_and_any()
     {
-        free(d);
-    };
-    std::fill_n(z::B_a(d), size, std::byte{0x01});
-}
+        struct Object
+        {
+            using Fn = std::function<void()>;
+            Object(Fn _fn) : fn(_fn)
+            {
+            }
+            ~Object()
+            {
+                fn();
+            }
+
+          private:
+            Fn fn;
+        };
+
+        struct Destroy
+        {
+            bool void_p = false;
+            bool any = false;
+            bool unique = false;
+        } destroy;
+
+        void* obj_void_p = new Object(
+            [&]
+            {
+                spdlog::get().info("void*");
+                destroy.void_p = true;
+            }
+        );
+
+        delete static_cast<Object*>(obj_void_p);
+
+        {
+            auto obj_any = std::make_any<Object>(
+                [&]
+                {
+                    spdlog::get().info("any");
+                    destroy.any = true;
+                }
+            );
+
+            auto p = std::any_cast<Object>(&obj_any);
+            if (p != nullptr)
+            {
+                static_assert(std::is_same_v<Object*, decltype(p)>);
+            }
+        }
+
+        {
+            auto unique = [&](int* _ptr)
+            {
+                delete _ptr;
+                spdlog::get().info("unique_ptr");
+                destroy.unique = true;
+            };
+            std::unique_ptr<int, decltype(unique)> ptr(new int(0), unique);
+        }
+
+        REQUIRE(destroy.void_p);
+        REQUIRE(destroy.any);
+        REQUIRE(destroy.unique);
+    }
+
+    void apply_callback()
+    {
+        int x = 0;
+
+        // 將lambda轉成std::function<void()>包裝到類中
+        Context context{[&] { x = 1; }};
+
+        // 通過靜態類方法將void*轉成類再調用之前保存的lambda
+        apply_callback(Context::call, &context);
+
+        REQUIRE(x == 1);
+    }
+
+    void defer_check()
+    {
+        int n = 1;
+        {
+            BOOST_SCOPE_DEFER[&]
+            {
+                n++;
+                spdlog::get().info("");
+            };
+            REQUIRE(n == 1);
+        }
+        REQUIRE(n == 2);
+    }
+
+    void memset_check()
+    {
+        std::vector<std::uint8_t> v8(8, 1);
+        // spdlog_module::get().info("v: {}", spdlog::to_hex(v8));
+
+        std::vector<std::uint32_t> v32(8, 1);
+        auto v32a = v32;
+        std::memset(
+            v32.data(),                        // 目標
+            0,                                 // 值
+            v32.size() * sizeof(std::uint32_t) // 以字節為單位的長度
+        );
+        std::fill_n(v32a.begin(), v32a.size(), 0);
+        // spdlog_module::get().info("v32: {}", spdlog::to_hex(v32.begin(), v32.end()));
+        REQUIRE(v32 == v32a);
+    }
+
+    void memcpy_check()
+    {
+        std::vector<std::uint8_t> v8(64, 0);
+        auto v8a = v8;
+        // SPDLOG_INFO("v: {}", spdlog::to_hex(v8));
+        // spdlog_module::get().info("v: {}", spdlog_module::to_hex(v8));
+        std::vector<std::uint32_t> v32(4, 1);
+
+        std::memcpy(
+            v8.data(),                         // 目標
+            v32.data(),                        // 源
+            v32.size() * sizeof(std::uint32_t) // 以字節為單位的長度
+        );
+        std::copy_n(v32.data(), v32.size(), (std::uint32_t*)v8a.data());
+        // SPDLOG_INFO("v: {}", spdlog::to_hex(v8));
+        REQUIRE(v8 == v8a);
+    }
+
+    // 柔性數組
+    void zero_size_array()
+    {
+        namespace z = zero_size_array;
+
+        // 柔性數組本身不佔用空間，但是如果它是結構的最後一個成員，
+        // 那麼結構的大小就會包含柔性數組的大小。
+        // 因此，sizeof(A)和sizeof(B)的大小是相同的。
+        REQUIRE(sizeof(z::A) == sizeof(z::B));
+
+        // 柔性數組可以用於動態分配內存，
+        // 因為它的大小是在運行時決定的。
+        auto size = 8u;
+        auto d = (z::B*)std::malloc(sizeof(z::B) + size);
+        BOOST_SCOPE_DEFER[&]
+        {
+            std::free(d);
+        };
+        std::fill_n(z::B_a(d), size, std::byte{0x01});
+    }
+
+    void set()
+    {
+        namespace ranges = std::ranges;
+        using SetType = std::set<int>;
+        SetType v1{1, 2, 3, 4};
+        SetType v2{3, 7, 2, 1};
+
+        SetType v1_v2;
+        // v1 - v2
+        ranges::set_difference(v1, v2, std::inserter(v1_v2, v1_v2.begin()));
+        REQUIRE(v1_v2 == SetType{4});
+
+        SetType v2_v1;
+        // v2 - v1
+        ranges::set_difference(v2, v1, std::inserter(v2_v1, v2_v1.begin()));
+        REQUIRE(v2_v1 == SetType{7});
+    }
+} // namespace test
 
 namespace detail
 {
@@ -245,44 +247,6 @@ namespace detail
     fn construct;
     int count = 0;
 } // namespace detail
-
-// struct Object
-// {
-//     Object()
-//     {
-//         SPDLOG_INFO("create Object");
-//     }
-//     ~Object() noexcept
-//     {
-//         SPDLOG_INFO("destroy Object: {}", id);
-//     }
-//     Object(const Object& _other)
-//     {
-//         SPDLOG_INFO("copy Object: {}", _other.id);
-//     }
-//     Object& operator=(const Object& _other)
-//     {
-//         SPDLOG_INFO("assign Object: {}", _other.id);
-//     }
-//     Object(Object&& _other) noexcept
-//     {
-//         SPDLOG_INFO("move Object: {}", _other.id);
-//     }
-//     Object& operator=(Object&&) noexcept
-//     {
-//         SPDLOG_INFO("move assign Object");
-//     }
-//     int id = 0;
-// };
-
-// TEST_CASE("Object", "[class]")
-// {
-//     Object obj;
-//     obj.id = 1;
-//     Object obj2 = obj;
-//     obj2.id = 2;
-//     Object obj3(std::move(obj2));
-// }
 
 struct Object
 {
@@ -328,96 +292,14 @@ Object fn()
     return obj;
 }
 
-TEST_CASE("Object", "[move]")
-{
-    // assert(detail::count == 1);
-    // auto obj = fn();
-    Object obj;
-
-    auto cc = 0;
-    detail::copy_construct = [&] { cc++; };
-
-    auto obj2 = obj;
-    REQUIRE(cc == 1);
-
-    // detail::copy_construct = [&]
-    // {
-    //     SPDLOG_INFO("copy construct");
-    // };
-
-    auto ca = 0;
-    detail::copy_assign = [&]
-    {
-        ca++;
-        spdlog::get().info("copy assign");
-    };
-
-    auto mc = 0;
-    detail::move_construct = [&]
-    {
-        mc++;
-        spdlog::get().info("move construct");
-    };
-
-    auto ma = 0;
-    detail::move_assign = [&]
-    {
-        ma++;
-        spdlog::get().info("move assign");
-    };
-
-    auto obj3 = std::move(obj2);
-    obj3.value++;
-    spdlog::get().info("obj3.value: {}", obj3.value);
-    REQUIRE(mc == 1);
-
-    // auto fn = []
-    // {
-    //     Object obj;
-    //     SPDLOG_INFO("obj.value: {}", obj.value);
-    //     return obj;
-    // };
-    // ca = 0;
-    // cc = 0;
-    // mc = 0;
-    // ma = 0;
-    // auto obj4 = fn();
-    // SPDLOG_INFO("obj4.value: {}", obj4.value);
-    // CHECK(cc == 1);
-    // CHECK(ca == 1);
-    // CHECK(ma == 1);
-    // CHECK(mc == 1);
-    // REQUIRE(mc == 1);
-}
-
-TEST_CASE("set", "[algorithm]")
-{
-    namespace ranges = std::ranges;
-    using SetType = std::set<int>;
-    SetType v1{1, 2, 3, 4};
-    SetType v2{3, 7, 2, 1};
-
-    SetType v1_v2;
-    // v1 - v2
-    ranges::set_difference(v1, v2, std::inserter(v1_v2, v1_v2.begin()));
-    REQUIRE(v1_v2 == SetType{4});
-
-    SetType v2_v1;
-    // v2 - v1
-    ranges::set_difference(v2, v1, std::inserter(v2_v1, v2_v1.begin()));
-    REQUIRE(v2_v1 == SetType{7});
-}
-
-void log(const std::string_view _message,
-    const std::source_location location = std::source_location::current())
+void log(const std::string_view _message, const std::source_location location = std::source_location::current())
 {
     std::print("[{}:{}] {}\n", location.function_name(), location.line(), _message);
 }
 
 int main(int _argc, char* _argv[])
 {
-    //std::string log_format{"[%C-%m-%d %T.%e] [%^%L%$] [%-20!!:%4#] %v"};
-    std::string log_format{"[%C-%m-%d %T.%e] [%^%L%$] %v"};
+    std::string log_format{"[%C-%m-%d %T.%e] [%^%L%$] [%-20!!:%4#] %v"};
     spdlog::set_pattern(log_format);
 
     spdlog::get().info("__cplusplus: {}", __cplusplus);
@@ -429,6 +311,18 @@ int main(int _argc, char* _argv[])
 
     spdlog::info("info");
 
-    auto result = Catch::Session().run(_argc, _argv);
+    using catch2::test_case;
+    using catch2::TestCase;
+    std::vector<TestCase> testCase{
+        test_case("void* and any", "[ptr]", test::void_and_any),
+        test_case("apply_callback", "[lambda]", test::apply_callback),
+        test_case("memset", "[mem]", test::memset_check),
+        test_case("memcpy", "[mem]", test::memcpy_check),
+        test_case("zero size array", "[struct]", test::zero_size_array),
+        test_case("set", "[algorithm]", test::set),
+        test_case("defer", "[boost.scope]", test::defer_check)
+    };
+
+    auto result = catch2::run(_argc, _argv);
     return result;
 }
