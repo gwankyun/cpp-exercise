@@ -86,7 +86,7 @@ TEST_CASE("void* and any", "[ptr]")
     void* obj_void_p = new Object(
         [&]
         {
-            spdlog_module::get().info("void*");
+            spdlog::get().info("void*");
             destroy.void_p = true;
         });
 
@@ -96,7 +96,7 @@ TEST_CASE("void* and any", "[ptr]")
         auto obj_any = std::make_any<Object>(
             [&]
             {
-                spdlog_module::get().info("any");
+                spdlog::get().info("any");
                 destroy.any = true;
             });
 
@@ -111,7 +111,7 @@ TEST_CASE("void* and any", "[ptr]")
         auto unique = [&](int* _ptr)
         {
             delete _ptr;
-            spdlog_module::get().info("unique_ptr");
+            spdlog::get().info("unique_ptr");
             destroy.unique = true;
         };
         std::unique_ptr<int, decltype(unique)> ptr(new int(0), unique);
@@ -293,13 +293,13 @@ struct Object
     /// @brief 複製構造函數
     Object(const Object& _other) : value(_other.value)
     {
-        spdlog_module::get().info("copy Object");
+        spdlog::get().info("copy Object");
         detail::copy_construct();
     }
     /// @brief 複製賦值
     Object& operator=(const Object& _other)
     {
-        spdlog_module::get().info("assign Object");
+        spdlog::get().info("assign Object");
         value = _other.value;
         detail::copy_assign();
         return *this;
@@ -307,13 +307,13 @@ struct Object
     /// @brief 移動構造函數
     Object(Object&& _other) noexcept : value(_other.value)
     {
-        spdlog_module::get().info("move Object");
+        spdlog::get().info("move Object");
         detail::move_construct();
     }
     /// @brief 移動賦值
     Object& operator=(Object&& _other) noexcept
     {
-        spdlog_module::get().info("move assign Object");
+        spdlog::get().info("move assign Object");
         value = _other.value;
         detail::move_assign();
         return *this;
@@ -349,26 +349,26 @@ TEST_CASE("Object", "[move]")
     detail::copy_assign = [&]
     {
         ca++;
-        spdlog_module::get().info("copy assign");
+        spdlog::get().info("copy assign");
     };
 
     auto mc = 0;
     detail::move_construct = [&]
     {
         mc++;
-        spdlog_module::get().info("move construct");
+        spdlog::get().info("move construct");
     };
 
     auto ma = 0;
     detail::move_assign = [&]
     {
         ma++;
-        spdlog_module::get().info("move assign");
+        spdlog::get().info("move assign");
     };
 
     auto obj3 = std::move(obj2);
     obj3.value++;
-    spdlog_module::get().info("obj3.value: {}", obj3.value);
+    spdlog::get().info("obj3.value: {}", obj3.value);
     REQUIRE(mc == 1);
 
     // auto fn = []
@@ -418,16 +418,16 @@ int main(int _argc, char* _argv[])
 {
     //std::string log_format{"[%C-%m-%d %T.%e] [%^%L%$] [%-20!!:%4#] %v"};
     std::string log_format{"[%C-%m-%d %T.%e] [%^%L%$] %v"};
-    spdlog_module::set_pattern(log_format);
+    spdlog::set_pattern(log_format);
 
-    spdlog_module::get().info("__cplusplus: {}", __cplusplus);
+    spdlog::get().info("__cplusplus: {}", __cplusplus);
 
     log(std::format(""));
 
-    spdlog_module::get().warn("{}", "hello");
-    spdlog_module::get().info("{} + {} = {}", 1, 2, 3);
+    spdlog::get().warn("{}", "hello");
+    spdlog::get().info("{} + {} = {}", 1, 2, 3);
 
-    spdlog_module::info("info");
+    spdlog::info("info");
 
     auto result = Catch::Session().run(_argc, _argv);
     return result;

@@ -57,7 +57,7 @@ struct Location
     }
 };
 
-export namespace spdlog_module
+export namespace spdlog
 {
     Location get(const std::source_location location = std::source_location::current())
     {

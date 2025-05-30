@@ -5,7 +5,7 @@ module;
 export module catch2;
 import std;
 
-export namespace catch2_module
+export namespace catch2
 {
     template <typename CharT>
     int run(int argc, CharT const* const argv[])

@@ -7,8 +7,6 @@ import a;
 import catch2;
 import spdlog;
 
-namespace catch2 = catch2_module;
-
 void test_add()
 {
     REQUIRE(a::add(1, 2) == 3);
@@ -26,7 +24,7 @@ void test_vector()
 
 int main(int _argc, char* _argv[])
 {
-    spdlog_module::info("module test");
+    spdlog::info("module test");
     auto a = catch2::regist(&test_add, "a", "[a]");
     auto vec = catch2::regist(&test_vector, "vec", "[vec]");
     auto result = catch2::run(_argc, _argv);
