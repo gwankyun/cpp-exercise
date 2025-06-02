@@ -1,10 +1,8 @@
 ﻿module;
 
+#include <boost/scope/macro.h>
+#include <catch2/macro.h>
 #include "main_macro.h"
-//#include <boost/scope/defer.hpp>
-//#include <boost/scope/scope_exit.hpp>
-#include <catch2_macro.h>
-#include <boost.scope_macro.h>
 
 module main;
 import std;
@@ -312,16 +310,13 @@ int main(int _argc, char* _argv[])
     spdlog::info("info");
 
     using catch2::test_case;
-    using catch2::TestCase;
-    std::vector<TestCase> testCase{
-        test_case("void* and any", "[ptr]", test::void_and_any),
-        test_case("apply_callback", "[lambda]", test::apply_callback),
-        test_case("memset", "[mem]", test::memset_check),
-        test_case("memcpy", "[mem]", test::memcpy_check),
-        test_case("zero size array", "[struct]", test::zero_size_array),
-        test_case("set", "[algorithm]", test::set),
-        test_case("defer", "[boost.scope]", test::defer_check)
-    };
+    test_case("void* and any", "[ptr]", test::void_and_any);
+    test_case("apply_callback", "[lambda]", test::apply_callback);
+    test_case("memset", "[mem]", test::memset_check);
+    test_case("memcpy", "[mem]", test::memcpy_check);
+    test_case("zero size array", "[struct]", test::zero_size_array);
+    test_case("set", "[algorithm]", test::set);
+    test_case("defer", "[boost.scope]", test::defer_check);
 
     auto result = catch2::run(_argc, _argv);
     return result;
