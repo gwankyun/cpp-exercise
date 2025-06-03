@@ -1,6 +1,6 @@
 ﻿module;
-#include <boost/scope/macro.h>
-#include <catch2/macro.h>
+#include <module/boost/scope/macro.h>
+#include <module/catch2/macro.h>
 
 module main;
 import std;
@@ -12,6 +12,14 @@ import boost.scope;
 unsigned int Factorial(unsigned int number)
 {
     return number <= 1 ? number : Factorial(number - 1) * number;
+}
+
+void factorials_are_computed()
+{
+    REQUIRE(Factorial(1) == 1);
+    REQUIRE(Factorial(2) == 2);
+    REQUIRE(Factorial(3) == 6);
+    REQUIRE(Factorial(10) == 3628800);
 }
 
 void test_add()
@@ -29,17 +37,9 @@ void test_vector()
     REQUIRE(vec.size() == 4);
 }
 
-void factorials_are_computed()
-{
-    REQUIRE(Factorial(1) == 1);
-    REQUIRE(Factorial(2) == 2);
-    REQUIRE(Factorial(3) == 6);
-    REQUIRE(Factorial(10) == 3628800);
-}
-
 void vectors_can_be_sized_and_resized()
 {
-    using catch2::session;
+    using Catch::session;
     // This setup will be done 4 times in total, once for each section
     std::vector<int> v(5);
 
@@ -105,8 +105,9 @@ void test_defer()
 int main(int _argc, char* _argv[])
 {
     spdlog::get().info("module test");
-    using catch2::test_case;
-    test_case("a", "[a]", &test_add), test_case("vec", "[vector]", &test_vector);
+    using Catch::test_case;
+    test_case("a", "[a]", &test_add);
+    test_case("vec", "[vector]", &test_vector);
     test_case(
         "base", "[base]",
         []
@@ -125,7 +126,16 @@ int main(int _argc, char* _argv[])
 
     test_case("scope", "[boost]", test_defer);
 
-    //auto result = catch2::run(_argc, _argv);
-    auto result = catch2::Section().run(_argc, _argv);
+    test_case(
+        "without macro", "[lambda]",
+        []
+        {
+            Catch::require(a::add(1, 2) == 3, "a::add(1, 2) == 3");
+            Catch::check(false, "false");
+            Catch::require(a::add(1, 2) == 4, "a::add(1, 2) == 4");
+        }
+    );
+
+    auto result = Catch::Session().run(_argc, _argv);
     return result;
 }

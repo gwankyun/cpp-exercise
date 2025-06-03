@@ -1,5 +1,5 @@
 module;
-#include <catch2/../catch2/catch_session.hpp>
+#include <catch2/catch_session.hpp>
 #include <catch2/catch_test_macros.hpp>
 
 module catch2_example;

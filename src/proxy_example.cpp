@@ -62,8 +62,9 @@ int main(int _argc, char* _argv[])
     std::string log_format{"[%C-%m-%d %T.%e] [%^%L%$] [%-10!!:%4#] %v"};
     spdlog::set_pattern(log_format);
 
-    std::vector<pro::proxy<Shape>> shape_container = {pro::make_proxy<Shape, type::Circle>(1.0),
-                                                      pro::make_proxy<Shape, type::Rectangle>(2.0, 3.0)};
+    std::vector<pro::proxy<Shape>> shape_container = {
+        pro::make_proxy<Shape, type::Circle>(1.0), pro::make_proxy<Shape, type::Rectangle>(2.0, 3.0)
+    };
 
     for (auto& i : shape_container)
     {

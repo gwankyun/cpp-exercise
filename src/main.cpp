@@ -1,8 +1,7 @@
 ﻿module;
-
-#include <boost/scope/macro.h>
-#include <catch2/macro.h>
 #include "main_macro.h"
+#include <module/boost/scope/macro.h>
+#include <module/catch2/macro.h>
 
 module main;
 import std;
@@ -309,7 +308,7 @@ int main(int _argc, char* _argv[])
 
     spdlog::info("info");
 
-    using catch2::test_case;
+    using Catch::test_case;
     test_case("void* and any", "[ptr]", test::void_and_any);
     test_case("apply_callback", "[lambda]", test::apply_callback);
     test_case("memset", "[mem]", test::memset_check);
@@ -318,6 +317,6 @@ int main(int _argc, char* _argv[])
     test_case("set", "[algorithm]", test::set);
     test_case("defer", "[boost.scope]", test::defer_check);
 
-    auto result = catch2::run(_argc, _argv);
+    auto result = Catch::Session().run(_argc, _argv);
     return result;
 }

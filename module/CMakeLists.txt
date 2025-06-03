@@ -15,7 +15,8 @@ target_sources(${catch2_module}
   PRIVATE
     include/module/catch2/macro.h
   PRIVATE FILE_SET CXX_MODULES FILES
-    catch2.ixx)
+    catch2.ixx
+    catch2.session.ixx)
 target_include_directories(${catch2_module} PUBLIC include)
 target_link_libraries(${catch2_module} PUBLIC Catch2::Catch2)
 target_compile_features(${catch2_module} PRIVATE cxx_std_23)
@@ -32,6 +33,16 @@ target_include_directories(${boost_scope_module} PUBLIC include)
 target_link_libraries(${boost_scope_module} PUBLIC Boost::scope)
 target_compile_features(${boost_scope_module} PRIVATE cxx_std_23)
 set_target_properties(${boost_scope_module} PROPERTIES FOLDER module)
+
+set(dylib_module dylib_module)
+add_library(${dylib_module})
+target_sources(${dylib_module}
+  PRIVATE FILE_SET CXX_MODULES FILES
+    dylib.ixx)
+target_include_directories(${dylib_module} PUBLIC ${DYLIB_INCLUDE_DIRS})
+# target_link_libraries(${dylib_module} PUBLIC Boost::scope)
+target_compile_features(${dylib_module} PRIVATE cxx_std_23)
+set_target_properties(${dylib_module} PROPERTIES FOLDER module)
 
 set(module_main module_main)
 add_executable(${module_main})
