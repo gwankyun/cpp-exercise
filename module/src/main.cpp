@@ -9,6 +9,13 @@ import catch2;
 import spdlog;
 import boost.scope;
 
+#ifndef EXPRESSION
+#  define EXPRESSION CATCH_EXPRESSION
+#endif // !EXPRESSION
+
+using Catch::require;
+using Catch::check;
+
 unsigned int Factorial(unsigned int number)
 {
     return number <= 1 ? number : Factorial(number - 1) * number;
