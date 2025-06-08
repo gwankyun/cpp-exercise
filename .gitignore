@@ -331,3 +331,4 @@ ASALocalRun/
 
 build/
 lib/
+cpp-exercise-cppcheck-build-dir/

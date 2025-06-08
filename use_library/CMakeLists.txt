@@ -17,7 +17,6 @@ target_sources(${shared_lib} PRIVATE
   include/shared_lib.h
 )
 target_compile_definitions(${shared_lib} PRIVATE DYN_LIB_EXPORT)
-# target_link_libraries(${shared_lib} PRIVATE ${object_lib})
 target_compile_features(${shared_lib} PRIVATE cxx_std_20)
 
 # 生成靜態庫
@@ -36,7 +35,6 @@ target_sources(${module_lib} PRIVATE
   src/shared_lib.cpp
   include/shared_lib.h
 )
-# target_link_libraries(${module_lib} PRIVATE ${object_lib})
 target_compile_definitions(${module_lib} PRIVATE DYN_LIB_EXPORT)
 target_compile_features(${module_lib} PRIVATE cxx_std_20)
 
@@ -49,7 +47,6 @@ target_sources(${shared_lib_test} PRIVATE
   include/shared_lib.h
   shared_lib_test.py
 )
-# target_include_directories(${shared_lib_test} PRIVATE ${DYLIB_INCLUDE_DIRS})
 target_link_libraries(${shared_lib_test} PRIVATE
   spdlog_module catch2_module dylib_module ${shared_lib} ${static_lib})
 target_compile_features(${shared_lib_test} PRIVATE cxx_std_23)

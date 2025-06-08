@@ -1,8 +1,8 @@
 ﻿# cmake最低版本
-cmake_minimum_required(VERSION 3.10...4.0)
+cmake_minimum_required(VERSION 3.28...4.0)
 
 # 項目名
-project(cpp-exercise)
+project(cpp-exercise LANGUAGES CXX)
 
 include(CMakePrintHelpers) # cmake_print_variables
 
@@ -38,6 +38,8 @@ find_package(Catch2 CONFIG REQUIRED)
 find_package(libuv CONFIG REQUIRED)
 
 set(msvc_options)
+
+# 提高警告級別
 list(APPEND msvc_options "/W4" "/MP")
 
 # 引入__cplusplus
@@ -49,9 +51,15 @@ list(APPEND msvc_options "/experimental:module")
 # 柔性數組
 list(APPEND msvc_options "/Zc:zeroSizeArrayNew")
 
+# 支持源碼UTF-8
 list(APPEND msvc_options "/utf-8")
 
+# 全局添加
 add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:${msvc_options}>")
+
+# 下拉選項
+set(color "" CACHE STRING "color")
+set_property(CACHE color PROPERTY STRINGS "red;green;blue")
 
 add_subdirectory(module)
 
@@ -64,7 +72,8 @@ target_sources(${main}
   PRIVATE FILE_SET CXX_MODULES FILES
     src/main.ixx
 )
-target_link_libraries(${main} PRIVATE boost_scope_module catch2_module spdlog_module)
+target_link_libraries(${main}
+  PRIVATE ${boost_scope_module} ${catch2_module} ${spdlog_module})
 target_compile_features(${main} PRIVATE cxx_std_23)
 
 set(other other)

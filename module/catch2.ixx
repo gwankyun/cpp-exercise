@@ -5,7 +5,7 @@ export module catch2;
 export import catch2.session;
 import std;
 
-::Catch::SourceLineInfo lineInfo(std::source_location _location)
+auto lineInfo(std::source_location _location)
 {
     return ::Catch::SourceLineInfo(_location.file_name(), static_cast<std::size_t>(_location.line()));
 }
