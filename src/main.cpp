@@ -9,6 +9,12 @@ import spdlog;
 import catch2;
 import boost.scope;
 
+#ifndef ON
+#  define ON(_exp) (CATCH_EXPRESSION(_exp))
+#endif
+
+namespace c = Catch;
+
 template <typename T>
 inline void delete_ptr(T*& _ptr)
 {
@@ -123,9 +129,9 @@ namespace test
             std::unique_ptr<int, decltype(unique)> ptr(new int(0), unique);
         }
 
-        REQUIRE(destroy.void_p);
-        REQUIRE(destroy.any);
-        REQUIRE(destroy.unique);
+        c::require ON(destroy.void_p);
+        c::require ON(destroy.any);
+        c::require ON(destroy.unique);
     }
 
     void apply_callback()
@@ -138,7 +144,7 @@ namespace test
         // 通過靜態類方法將void*轉成類再調用之前保存的lambda
         apply_callback(Context::call, &context);
 
-        REQUIRE(x == 1);
+        c::require ON(x == 1);
     }
 
     void defer_check()
@@ -150,9 +156,9 @@ namespace test
                 n++;
                 spdlog::get().info("");
             };
-            REQUIRE(n == 1);
+            c::require ON(n == 1);
         }
-        REQUIRE(n == 2);
+        c::require ON(n == 2);
     }
 
     void memset_check()
@@ -169,7 +175,7 @@ namespace test
         );
         std::fill_n(v32a.begin(), v32a.size(), 0);
         // spdlog_module::get().info("v32: {}", spdlog::to_hex(v32.begin(), v32.end()));
-        REQUIRE(v32 == v32a);
+        c::require ON(v32 == v32a);
     }
 
     void memcpy_check()
@@ -187,7 +193,7 @@ namespace test
         );
         std::copy_n(v32.data(), v32.size(), (std::uint32_t*)v8a.data());
         // SPDLOG_INFO("v: {}", spdlog::to_hex(v8));
-        REQUIRE(v8 == v8a);
+        c::require ON(v8 == v8a);
     }
 
     // 柔性數組
@@ -198,7 +204,7 @@ namespace test
         // 柔性數組本身不佔用空間，但是如果它是結構的最後一個成員，
         // 那麼結構的大小就會包含柔性數組的大小。
         // 因此，sizeof(A)和sizeof(B)的大小是相同的。
-        REQUIRE(sizeof(z::A) == sizeof(z::B));
+        c::require ON(sizeof(z::A) == sizeof(z::B));
 
         // 柔性數組可以用於動態分配內存，
         // 因為它的大小是在運行時決定的。
@@ -221,12 +227,12 @@ namespace test
         SetType v1_v2;
         // v1 - v2
         ranges::set_difference(v1, v2, std::inserter(v1_v2, v1_v2.begin()));
-        REQUIRE(v1_v2 == SetType{4});
+        c::require ON(v1_v2 == SetType{4});
 
         SetType v2_v1;
         // v2 - v1
         ranges::set_difference(v2, v1, std::inserter(v2_v1, v2_v1.begin()));
-        REQUIRE(v2_v1 == SetType{7});
+        c::require ON(v2_v1 == SetType{7});
     }
 } // namespace test
 

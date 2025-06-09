@@ -10,9 +10,17 @@ auto lineInfo(std::source_location _location)
     return ::Catch::SourceLineInfo(_location.file_name(), static_cast<std::size_t>(_location.line()));
 }
 
+namespace detail
+{
+    constexpr std::source_location current(std::source_location location = std::source_location::current())
+    {
+        return location;
+    }
+} // namespace detail
+
 void test(
     bool _expression, std::string _message, Catch::StringRef _macroName,
-    Catch::ResultDisposition::Flags _resultDisposition, std::source_location _location = std::source_location::current()
+    Catch::ResultDisposition::Flags _resultDisposition, const std::source_location _location = detail::current()
 )
 {
     do
@@ -34,24 +42,18 @@ void test(
 
 export namespace Catch
 {
-    void require(
-        bool _expression, std::string _message = "", std::source_location _location = std::source_location::current()
-    )
+    using detail::current;
+    void require(bool _expression, std::string _message = "", const std::source_location _location = detail::current())
     {
         test(_expression, _message, "REQUIRE"_catch_sr, Catch::ResultDisposition::Normal, _location);
     }
 
-    void check(
-        bool _expression, std::string _message = "", std::source_location _location = std::source_location::current()
-    )
+    void check(bool _expression, std::string _message = "", const std::source_location _location = detail::current())
     {
         test(_expression, _message, "CHECK"_catch_sr, Catch::ResultDisposition::ContinueOnFailure, _location);
     }
 
-    void test_case(
-        std::string _name, std::string _tags, void (*_fn)(),
-        std::source_location _location = std::source_location::current()
-    )
+    void test_case(std::string _name, std::string _tags, void (*_fn)(), std::source_location _location = detail::current())
     {
         CATCH_INTERNAL_START_WARNINGS_SUPPRESSION
         const Catch::AutoReg autoRegistrar(

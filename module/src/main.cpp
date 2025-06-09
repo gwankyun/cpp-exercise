@@ -9,12 +9,11 @@ import catch2;
 import spdlog;
 import boost.scope;
 
-#ifndef EXPRESSION
-#  define EXPRESSION CATCH_EXPRESSION
-#endif // !EXPRESSION
+#ifndef ON
+#  define ON(_exp) (CATCH_EXPRESSION(_exp))
+#endif
 
-using Catch::require;
-using Catch::check;
+namespace c = Catch;
 
 unsigned int Factorial(unsigned int number)
 {
@@ -23,25 +22,25 @@ unsigned int Factorial(unsigned int number)
 
 void factorials_are_computed()
 {
-    REQUIRE(Factorial(1) == 1);
-    REQUIRE(Factorial(2) == 2);
-    REQUIRE(Factorial(3) == 6);
-    REQUIRE(Factorial(10) == 3628800);
+    c::require ON(Factorial(1) == 1);
+    c::require ON(Factorial(2) == 2);
+    c::require ON(Factorial(3) == 6);
+    c::require ON(Factorial(10) == 3628800);
 }
 
 void test_add()
 {
-    REQUIRE(a::add(1, 2) == 3);
-    CHECK(false);
-    REQUIRE(a::add(1, 2) == 4);
+    c::require ON(a::add(1, 2) == 3);
+    c::check ON(false);
+    c::require ON(a::add(1, 2) == 4);
 }
 
 void test_vector()
 {
     std::vector<int> vec{1, 2, 3};
-    REQUIRE(vec.size() == 3);
+    c::require ON(vec.size() == 3);
     vec.push_back(4);
-    REQUIRE(vec.size() == 4);
+    c::require ON(vec.size() == 4);
 }
 
 void vectors_can_be_sized_and_resized()
@@ -50,8 +49,8 @@ void vectors_can_be_sized_and_resized()
     // This setup will be done 4 times in total, once for each section
     std::vector<int> v(5);
 
-    REQUIRE(v.size() == 5);
-    REQUIRE(v.capacity() >= 5);
+    c::require ON(v.size() == 5);
+    c::require ON(v.capacity() >= 5);
 
     session(
         "resizing bigger changes size and capacity",
@@ -59,8 +58,8 @@ void vectors_can_be_sized_and_resized()
         {
             v.resize(10);
 
-            REQUIRE(v.size() == 10);
-            REQUIRE(v.capacity() >= 10);
+            c::require ON(v.size() == 10);
+            c::require ON(v.capacity() >= 10);
         }
     );
     session(
@@ -69,8 +68,8 @@ void vectors_can_be_sized_and_resized()
         {
             v.resize(0);
 
-            REQUIRE(v.size() == 0);
-            REQUIRE(v.capacity() >= 5);
+            c::require ON(v.size() == 0);
+            c::require ON(v.capacity() >= 5);
         }
     );
     session(
@@ -79,8 +78,8 @@ void vectors_can_be_sized_and_resized()
         {
             v.reserve(10);
 
-            REQUIRE(v.size() == 5);
-            REQUIRE(v.capacity() >= 10);
+            c::require ON(v.size() == 5);
+            c::require ON(v.capacity() >= 10);
         }
     );
     session(
@@ -89,8 +88,8 @@ void vectors_can_be_sized_and_resized()
         {
             v.reserve(0);
 
-            REQUIRE(v.size() == 5);
-            REQUIRE(v.capacity() >= 5);
+            c::require ON(v.size() == 5);
+            c::require ON(v.capacity() >= 5);
         }
     );
 }
@@ -104,9 +103,9 @@ void test_defer()
             n++;
             spdlog::get().info("");
         };
-        REQUIRE(n == 1);
+        c::require ON(n == 1);
     }
-    REQUIRE(n == 2);
+    c::require ON(n == 2);
 }
 
 int main(int _argc, char* _argv[])
@@ -120,15 +119,15 @@ int main(int _argc, char* _argv[])
         []
         {
             using namespace std::literals::string_literals;
-            REQUIRE(1 + 2 == 3);
-            REQUIRE("123"s + "456"s == "123456"s);
+            c::require ON(1 + 2 == 3);
+            c::require ON("123"s + "456"s == "123456"s);
         }
     );
     test_case("Factorials are computed", "[factorial]", &factorials_are_computed);
     test_case("vectors can be sized and resized", "[vector]", &vectors_can_be_sized_and_resized);
 
     {
-        test_case("lambda", "[lambda]", [] { REQUIRE(1 + 2 == 3); });
+        test_case("lambda", "[lambda]", [] { c::require ON(1 + 2 == 3); });
     }
 
     test_case("scope", "[boost]", test_defer);
@@ -137,9 +136,9 @@ int main(int _argc, char* _argv[])
         "without macro", "[lambda]",
         []
         {
-            Catch::require(a::add(1, 2) == 3, "a::add(1, 2) == 3");
-            Catch::check(false, "false");
-            Catch::require(a::add(1, 2) == 4, "a::add(1, 2) == 4");
+            c::require ON(a::add(1, 2) == 3);
+            c::check(false, "false", Catch::current());
+            c::require ON(a::add(1, 2) == 4);
         }
     );
 

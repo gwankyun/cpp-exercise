@@ -5,7 +5,7 @@
 #endif // !CATCH_STRING
 
 #ifndef CATCH_EXPRESSION
-#  define CATCH_EXPRESSION(_expression) _expression, CATCH_STRING(_expression)
+#  define CATCH_EXPRESSION(_expression) _expression, CATCH_STRING(_expression), Catch::current()
 #endif // !CATCH_EXPRESSION
 
 #if defined(CATCH_CONFIG_PREFIX_ALL)
