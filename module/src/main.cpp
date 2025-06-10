@@ -10,7 +10,7 @@ import spdlog;
 import boost.scope;
 
 #ifndef ON
-#  define ON(_exp) (CATCH_EXPRESSION(_exp))
+#  define ON CATCH_ON
 #endif
 
 namespace c = Catch;

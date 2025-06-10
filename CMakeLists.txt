@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.28...4.0)
 
 # 項目名
-project(cpp-exercise LANGUAGES CXX)
+project(cpp_exercise LANGUAGES CXX)
 
 include(CMakePrintHelpers) # cmake_print_variables
 
@@ -17,15 +17,17 @@ cmake_print_variables(CMAKE_CURRENT_SOURCE_DIR)
 # 掃描模塊
 set(CMAKE_CXX_SCAN_FOR_MODULES ON)
 
-# 輸出目錄
-set(source_dir ${CMAKE_CURRENT_SOURCE_DIR})
-
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${source_dir}/bin)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${source_dir}/bin)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${source_dir}/lib)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${source_dir}/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ${source_dir}/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ${source_dir}/lib)
+# 自定義輸出目錄
+set(output OFF CACHE BOOL "output path")
+if(output)
+  set(source_dir ${CMAKE_CURRENT_SOURCE_DIR})
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${source_dir}/bin)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${source_dir}/bin)
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${source_dir}/lib)
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${source_dir}/lib)
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ${source_dir}/lib)
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ${source_dir}/lib)
+endif()
 
 find_package(spdlog CONFIG REQUIRED)
 
@@ -36,6 +38,8 @@ find_package(proxy CONFIG)
 find_package(Catch2 CONFIG REQUIRED)
 
 find_package(libuv CONFIG REQUIRED)
+
+find_path(DYLIB_INCLUDE_DIRS "dylib.hpp")
 
 set(msvc_options)
 
@@ -146,8 +150,6 @@ target_compile_features(${catch2_example} PRIVATE cxx_std_23)
 set_target_properties(${catch2_example} PROPERTIES FOLDER ${other})
 
 add_subdirectory(uv)
-
-find_path(DYLIB_INCLUDE_DIRS "dylib.hpp")
 
 add_subdirectory(use_library)
 

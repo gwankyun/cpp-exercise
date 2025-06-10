@@ -10,7 +10,7 @@ import catch2;
 import boost.scope;
 
 #ifndef ON
-#  define ON(_exp) (CATCH_EXPRESSION(_exp))
+#  define ON CATCH_ON
 #endif
 
 namespace c = Catch;
@@ -107,7 +107,7 @@ namespace test
             auto obj_any = std::make_any<Object>(
                 [&]
                 {
-                    spdlog::get().info("any");
+                    //logging::info("any");
                     destroy.any = true;
                 }
             );
@@ -154,7 +154,7 @@ namespace test
             BOOST_SCOPE_DEFER[&]
             {
                 n++;
-                spdlog::get().info("");
+                //logging::info("");
             };
             c::require ON(n == 1);
         }
@@ -312,7 +312,9 @@ int main(int _argc, char* _argv[])
     spdlog::get().warn("{}", "hello");
     spdlog::get().info("{} + {} = {}", 1, 2, 3);
 
-    spdlog::info("info");
+    spdlog::get().info("info");
+
+    spdlog::get().warn("warn");
 
     using Catch::test_case;
     test_case("void* and any", "[ptr]", test::void_and_any);

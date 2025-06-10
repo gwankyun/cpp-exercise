@@ -15,3 +15,7 @@
 #  define REQUIRE(_expression) Catch::require(CATCH_EXPRESSION(_expression))
 #  define CHECK(_expression) Catch::check(CATCH_EXPRESSION(_expression))
 #endif
+
+#ifndef CATCH_ON
+#  define CATCH_ON(_exp) (CATCH_EXPRESSION(_exp))
+#endif

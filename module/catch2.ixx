@@ -1,4 +1,4 @@
-module;
+﻿module;
 #include <catch2/catch_test_macros.hpp>
 
 export module catch2;
@@ -12,6 +12,11 @@ auto lineInfo(std::source_location _location)
 
 namespace detail
 {
+    /// <summary>
+    /// std::source_location::current()的重新綁定，因為需要一個constexpr函數
+    /// </summary>
+    /// <param name="location"></param>
+    /// <returns></returns>
     constexpr std::source_location current(std::source_location location = std::source_location::current())
     {
         return location;
@@ -40,20 +45,48 @@ void test(
     } while ((void)0, (false) && static_cast<const bool&>(!!(_expression)));
 }
 
+class FunctionTestInvokerAsMethod : public Catch::ITestInvoker
+{
+    std::function<void()> m_testCallable;
+
+  public:
+    FunctionTestInvokerAsMethod(std::function<void()> testCallable) noexcept : m_testCallable(testCallable)
+    {
+    }
+
+    void invoke() const override
+    {
+        m_testCallable();
+    }
+};
+
+namespace Catch
+{
+    Catch::Detail::unique_ptr<Catch::ITestInvoker> makeTestInvoker(std::function<void()> _fn)
+    {
+        using Catch::Detail::unique_ptr;
+        using Invoker = FunctionTestInvokerAsMethod;
+        unique_ptr<Invoker> functionInvoker(new Invoker(_fn));
+        return functionInvoker;
+    }
+} // namespace Catch
+
 export namespace Catch
 {
     using detail::current;
-    void require(bool _expression, std::string _message = "", const std::source_location _location = detail::current())
+    void require(bool _expression, std::string _message = "", const std::source_location _location = current())
     {
         test(_expression, _message, "REQUIRE"_catch_sr, Catch::ResultDisposition::Normal, _location);
     }
 
-    void check(bool _expression, std::string _message = "", const std::source_location _location = detail::current())
+    void check(bool _expression, std::string _message = "", const std::source_location _location = current())
     {
         test(_expression, _message, "CHECK"_catch_sr, Catch::ResultDisposition::ContinueOnFailure, _location);
     }
 
-    void test_case(std::string _name, std::string _tags, void (*_fn)(), std::source_location _location = detail::current())
+    void test_case(
+        std::string _name, std::string _tags, std::function<void()> _fn, std::source_location _location = current()
+    )
     {
         CATCH_INTERNAL_START_WARNINGS_SUPPRESSION
         const Catch::AutoReg autoRegistrar(
@@ -62,10 +95,7 @@ export namespace Catch
         CATCH_INTERNAL_STOP_WARNINGS_SUPPRESSION
     }
 
-    void session(
-        std::string _message, std::function<void()> _fn,
-        std::source_location _location = std::source_location::current()
-    )
+    void session(std::string _message, std::function<void()> _fn, std::source_location _location = current())
     {
         if (Catch::Section const& catch_internal_Section = Catch::Section(lineInfo(_location), _message))
         {
