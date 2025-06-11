@@ -8,21 +8,7 @@ target_link_libraries(spdlog_module PUBLIC spdlog::spdlog)
 target_compile_features(spdlog_module PRIVATE cxx_std_23)
 add_library(spdlog::module ALIAS spdlog_module)
 
-add_library(catch2_module)
-target_sources(catch2_module
-  PRIVATE
-    catch2/catch2/macro.h
-    catch2/catch2/compat.h
-  PRIVATE FILE_SET CXX_MODULES FILES
-    catch2/catch2.ixx
-    catch2/catch2.base.ixx
-    catch2/catch2.session.ixx
-    catch2/catch2.compat.ixx
-)
-target_include_directories(catch2_module PUBLIC catch2)
-target_link_libraries(catch2_module PUBLIC Catch2::Catch2)
-target_compile_features(catch2_module PRIVATE cxx_std_23)
-add_library(Catch2::module ALIAS catch2_module)
+add_subdirectory(catch2)
 
 add_library(boost_scope_module)
 target_sources(boost_scope_module
