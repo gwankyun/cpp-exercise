@@ -1,7 +1,7 @@
 ﻿module;
 #include "main_macro.h"
-#include <module/boost/scope/macro.h>
-#include <module/catch2/macro.h>
+#include <boost.scope/macro.h>
+#include <catch2/macro.h>
 
 module main;
 import std;
@@ -11,7 +11,7 @@ import boost.scope;
 
 #ifndef ON
 #  define ON CATCH_ON
-#endif
+#endif // !ON
 
 namespace c = Catch;
 
@@ -164,7 +164,6 @@ namespace test
     void memset_check()
     {
         std::vector<std::uint8_t> v8(8, 1);
-        // spdlog_module::get().info("v: {}", spdlog::to_hex(v8));
 
         std::vector<std::uint32_t> v32(8, 1);
         auto v32a = v32;
@@ -174,7 +173,6 @@ namespace test
             v32.size() * sizeof(std::uint32_t) // 以字節為單位的長度
         );
         std::fill_n(v32a.begin(), v32a.size(), 0);
-        // spdlog_module::get().info("v32: {}", spdlog::to_hex(v32.begin(), v32.end()));
         c::require ON(v32 == v32a);
     }
 
@@ -183,7 +181,6 @@ namespace test
         std::vector<std::uint8_t> v8(64, 0);
         auto v8a = v8;
         // SPDLOG_INFO("v: {}", spdlog::to_hex(v8));
-        // spdlog_module::get().info("v: {}", spdlog_module::to_hex(v8));
         std::vector<std::uint32_t> v32(4, 1);
 
         std::memcpy(

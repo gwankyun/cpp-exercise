@@ -1,7 +1,7 @@
 ﻿module;
 #include "../include/shared_lib.h"
 #include "../include/static_lib.h"
-#include <module/catch2/macro.h>
+#include <catch2/macro.h>
 
 module shared_lib_test;
 import std;

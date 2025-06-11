@@ -39,6 +39,12 @@ find_package(Catch2 CONFIG REQUIRED)
 
 find_package(libuv CONFIG REQUIRED)
 
+find_package(doctest CONFIG REQUIRED)
+
+find_package(hello-imgui CONFIG)
+
+find_package(nlohmann_json CONFIG)
+
 find_path(DYLIB_INCLUDE_DIRS "dylib.hpp")
 
 set(msvc_options)
@@ -67,87 +73,19 @@ set_property(CACHE color PROPERTY STRINGS "red;green;blue")
 
 add_subdirectory(module)
 
-set(main main)
-add_executable(${main})
-target_sources(${main}
+add_executable(main)
+target_sources(main
   PRIVATE
     src/main.cpp
     src/main_macro.h
   PRIVATE FILE_SET CXX_MODULES FILES
     src/main.ixx
 )
-target_link_libraries(${main}
-  PRIVATE ${boost_scope_module} ${catch2_module} ${spdlog_module})
-target_compile_features(${main} PRIVATE cxx_std_23)
+target_link_libraries(main
+  PRIVATE Boost::scope::module Catch2::module spdlog::module)
+target_compile_features(main PRIVATE cxx_std_23)
 
-set(other other)
-
-set(boost_example boost_example)
-add_executable(${boost_example})
-target_sources(${boost_example} PRIVATE
-  src/boost_example.cpp
-)
-target_link_libraries(${boost_example} PRIVATE Boost::scope Catch2::Catch2)
-target_compile_features(${boost_example} PRIVATE cxx_std_23)
-set_target_properties(${boost_example} PROPERTIES FOLDER ${other})
-
-find_package(doctest CONFIG REQUIRED)
-set(doctest_example doctest_example)
-add_executable(${doctest_example})
-target_sources(${doctest_example} PRIVATE
-  src/doctest_example.cpp
-)
-target_link_libraries(${doctest_example} PRIVATE doctest::doctest)
-target_compile_features(${doctest_example} PRIVATE cxx_std_23)
-set_target_properties(${doctest_example} PROPERTIES FOLDER ${other})
-
-set(intrusive_container intrusive_container)
-add_executable(${intrusive_container})
-target_sources(${intrusive_container} PRIVATE
-  src/intrusive_container.cpp
-)
-target_link_libraries(${intrusive_container} PRIVATE spdlog::spdlog)
-
-find_package(hello-imgui CONFIG)
-
-find_package(nlohmann_json CONFIG)
-
-if((TARGET hello-imgui::hello_imgui) AND(TARGET nlohmann_json::nlohmann_json))
-  set(hello_imgui_example hello_imgui_example)
-  add_executable(${hello_imgui_example})
-  target_sources(${hello_imgui_example} PRIVATE
-    src/hello_imgui_example.cpp
-  )
-  target_link_libraries(${hello_imgui_example} PRIVATE
-    hello-imgui::hello_imgui
-    nlohmann_json::nlohmann_json
-  )
-  target_compile_features(${hello_imgui_example} PRIVATE cxx_std_20)
-  set_target_properties(${hello_imgui_example} PROPERTIES FOLDER ${other})
-endif()
-
-if(TARGET msft_proxy)
-  set(proxy_example proxy_example)
-  add_executable(${proxy_example})
-  target_sources(${proxy_example} PRIVATE
-    src/proxy_example.cpp
-  )
-  target_link_libraries(${proxy_example} PRIVATE spdlog::spdlog msft_proxy)
-  target_compile_features(${proxy_example} PRIVATE cxx_std_20)
-  set_target_properties(${proxy_example} PROPERTIES FOLDER ${other})
-endif()
-
-set(catch2_example catch2_example)
-add_executable(${catch2_example})
-target_sources(${catch2_example}
-  PRIVATE
-    src/catch2_example.cpp
-  PRIVATE FILE_SET CXX_MODULES FILES
-    src/catch2_example.ixx
-)
-target_link_libraries(${catch2_example} PRIVATE Catch2::Catch2)
-target_compile_features(${catch2_example} PRIVATE cxx_std_23)
-set_target_properties(${catch2_example} PROPERTIES FOLDER ${other})
+add_subdirectory(other)
 
 add_subdirectory(uv)
 

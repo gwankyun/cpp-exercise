@@ -1,15 +1,9 @@
 ﻿module;
-#include <boost.scope/macro.h>
 #include <catch2/macro.h>
-#include <catch2/compat.h>
 
-module main;
+module catch2_module_example;
 import std;
-import a;
 import catch2;
-import catch2.compat;
-import spdlog;
-import boost.scope;
 
 #if !defined(ON) && defined(CATCH_ON)
 #  define ON CATCH_ON
@@ -30,67 +24,6 @@ void factorials_are_computed()
     c::require ON(Factorial(2) == 2);
     c::require ON(Factorial(3) == 6);
     c::require ON(Factorial(10) == 3628800);
-}
-
-TEST_CASE("Factorials are computed compatibility", "[factorial]")
-{
-    REQUIRE(Factorial(1) == 1);
-    REQUIRE(Factorial(2) == 2);
-    REQUIRE(Factorial(3) == 6);
-    REQUIRE(Factorial(10) == 3628800);
-}
-
-TEST_CASE("vectors can be sized and resized compatibility", "[vector]")
-{
-    // This setup will be done 4 times in total, once for each section
-    std::vector<int> v(5);
-
-    REQUIRE(v.size() == 5);
-    REQUIRE(v.capacity() >= 5);
-
-    SECTION("resizing bigger changes size and capacity")
-    {
-        v.resize(10);
-
-        REQUIRE(v.size() == 10);
-        REQUIRE(v.capacity() >= 10);
-    }
-    SECTION("resizing smaller changes size but not capacity")
-    {
-        v.resize(0);
-
-        REQUIRE(v.size() == 0);
-        REQUIRE(v.capacity() >= 5);
-    }
-    SECTION("reserving bigger changes capacity but not size")
-    {
-        v.reserve(10);
-
-        REQUIRE(v.size() == 5);
-        REQUIRE(v.capacity() >= 10);
-    }
-    SECTION("reserving smaller does not change size or capacity")
-    {
-        v.reserve(0);
-
-        REQUIRE(v.size() == 5);
-        REQUIRE(v.capacity() >= 5);
-    }
-}
-
-void test_add()
-{
-    c::require ON(a::add(1, 2) == 3);
-    c::check ON(false);
-    c::require ON(a::add(1, 2) == 4);
-}
-
-void test_vector()
-{
-    std::vector<int> vec{1, 2, 3};
-    c::require ON(vec.size() == 3);
-    vec.push_back(4);
-    c::require ON(vec.size() == 4);
 }
 
 void vectors_can_be_sized_and_resized()
@@ -144,28 +77,16 @@ void vectors_can_be_sized_and_resized()
     );
 }
 
-void test_defer()
+int test_add(int _i, int _j)
 {
-    int n = 1;
-    {
-        BOOST_SCOPE_DEFER[&]
-        {
-            n++;
-            spdlog::get().info("");
-        };
-        c::require ON(n == 1);
-    }
-    c::require ON(n == 2);
+    return _i + _j;
 }
 
 int main(int _argc, char* _argv[])
 {
-    spdlog::get().info("module test");
     using Catch::test_case;
-    test_case("a", "[a]", &test_add);
-    test_case("vec", "[vector]", &test_vector);
     test_case(
-        "base", "[base]",
+        "without capture", "[lambda]",
         []
         {
             using namespace std::literals::string_literals;
@@ -180,15 +101,13 @@ int main(int _argc, char* _argv[])
         test_case("lambda", "[lambda]", [] { c::require ON(1 + 2 == 3); });
     }
 
-    test_case("scope", "[boost]", test_defer);
-
+    int value = 9;
     test_case(
-        "without macro", "[lambda]",
-        []
+        "with capture", "[lambda]",
+        [&value]
         {
-            c::require ON(a::add(1, 2) == 3);
             c::check(false, "false", Catch::current());
-            c::require ON(a::add(1, 2) == 4);
+            c::require(test_add(value, 1) == 10);
         }
     );
 
