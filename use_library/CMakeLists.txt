@@ -36,11 +36,12 @@ target_compile_features(module_lib PRIVATE cxx_std_20)
 
 # 調用庫
 add_executable(shared_lib_test)
-target_sources(shared_lib_test PRIVATE
-  src/shared_lib_test.cpp
-  src/shared_lib_test.ixx
-  include/shared_lib.h
-  shared_lib_test.py
+target_sources(shared_lib_test
+  PRIVATE
+    include/shared_lib.h
+    shared_lib_test.py
+  PRIVATE FILE_SET CXX_MODULES FILES
+    src/shared_lib_test.ixx
 )
 target_link_libraries(shared_lib_test PRIVATE
   spdlog::module Catch2::module dylib::module shared_lib static_lib)

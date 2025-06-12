@@ -23,8 +23,6 @@ set(USE_CATCH2_COMPAT OFF CACHE BOOL "use catch2.compat")
 
 add_executable(catch2_module_example)
 target_sources(catch2_module_example
-  PRIVATE
-    src/catch2_module_example.cpp
   PRIVATE FILE_SET CXX_MODULES FILES
     src/catch2_module_example.ixx
 )
@@ -35,8 +33,6 @@ target_compile_features(catch2_module_example PRIVATE cxx_std_23)
 
 add_executable(catch2_module_compat_example)
 target_sources(catch2_module_compat_example
-  PRIVATE
-    src/catch2_compat_example.cpp
   PRIVATE FILE_SET CXX_MODULES FILES
     src/catch2_compat_example.ixx
 )
@@ -47,8 +43,6 @@ target_compile_features(catch2_module_compat_example PRIVATE cxx_std_23)
 
 add_executable(module_main)
 target_sources(module_main
-  PRIVATE
-    src/main.cpp
   PRIVATE FILE_SET CXX_MODULES FILES
     src/main.ixx
 )
@@ -59,3 +53,10 @@ target_link_libraries(module_main
     Boost::scope::module
     a)
 target_compile_features(module_main PRIVATE cxx_std_23)
+
+add_executable(single_main)
+target_sources(single_main
+  PRIVATE FILE_SET CXX_MODULES FILES
+    src/single_main.ixx
+)
+target_compile_features(single_main PRIVATE cxx_std_23)

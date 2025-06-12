@@ -76,7 +76,6 @@ add_subdirectory(module)
 add_executable(main)
 target_sources(main
   PRIVATE
-    src/main.cpp
     src/main_macro.h
   PRIVATE FILE_SET CXX_MODULES FILES
     src/main.ixx
