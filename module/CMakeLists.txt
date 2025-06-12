@@ -1,33 +1,12 @@
 ﻿set(CMAKE_FOLDER module)
 
-add_library(spdlog_module)
-target_sources(spdlog_module
-  PRIVATE FILE_SET CXX_MODULES FILES
-    spdlog.ixx)
-target_link_libraries(spdlog_module PUBLIC spdlog::spdlog)
-target_compile_features(spdlog_module PRIVATE cxx_std_23)
-add_library(spdlog::module ALIAS spdlog_module)
+add_subdirectory(spdlog)
 
 add_subdirectory(catch2)
 
-add_library(boost_scope_module)
-target_sources(boost_scope_module
-  PRIVATE
-    boost.scope/boost.scope/macro.h
-  PRIVATE FILE_SET CXX_MODULES FILES
-    boost.scope/boost.scope.ixx)
-target_include_directories(boost_scope_module PUBLIC boost.scope)
-target_link_libraries(boost_scope_module PUBLIC Boost::scope)
-target_compile_features(boost_scope_module PRIVATE cxx_std_23)
-add_library(Boost::scope::module ALIAS boost_scope_module)
+add_subdirectory(boost.scope)
 
-add_library(dylib_module)
-target_sources(dylib_module
-  PRIVATE FILE_SET CXX_MODULES FILES
-    dylib.ixx)
-target_include_directories(dylib_module PRIVATE ${DYLIB_INCLUDE_DIRS})
-target_compile_features(dylib_module PRIVATE cxx_std_23)
-add_library(dylib::module ALIAS dylib_module)
+add_subdirectory(dylib)
 
 add_library(a)
 target_sources(a
@@ -38,6 +17,9 @@ target_sources(a
     src/a.ixx
 )
 target_compile_features(a PRIVATE cxx_std_23)
+
+set(USE_CATCH2_MODERN OFF CACHE BOOL "use catch2.modern")
+set(USE_CATCH2_COMPAT OFF CACHE BOOL "use catch2.compat")
 
 add_executable(catch2_module_example)
 target_sources(catch2_module_example

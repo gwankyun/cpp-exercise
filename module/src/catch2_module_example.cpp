@@ -3,7 +3,7 @@
 
 module catch2_module_example;
 import std;
-import catch2;
+import catch2.modern;
 
 #if !defined(ON) && defined(CATCH_ON)
 #  define ON CATCH_ON

@@ -94,3 +94,5 @@ add_subdirectory(use_library)
 add_subdirectory(data_structure)
 
 add_subdirectory(ut)
+
+add_subdirectory(target)

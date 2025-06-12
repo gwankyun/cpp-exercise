@@ -7,6 +7,7 @@ target_sources(catch2_module
     catch2.ixx
     catch2.base.ixx
     catch2.session.ixx
+    catch2.modern.ixx
     catch2.compat.ixx
 )
 target_include_directories(catch2_module PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
