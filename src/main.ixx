@@ -2,6 +2,7 @@
 #include "main_macro.h"
 #include <boost.scope/macro.h>
 #include <catch2/macro.h>
+#include <spdlog/compat.h>
 
 export module main;
 import std;
@@ -312,6 +313,8 @@ export int main(int _argc, char* _argv[])
     spdlog::get().info("info");
 
     spdlog::get().warn("warn");
+
+    SPDLOG_INFO("macro info");
 
     using Catch::test_case;
     test_case("void* and any", "[ptr]", test::void_and_any);
