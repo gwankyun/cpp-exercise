@@ -50,7 +50,7 @@ target_link_libraries(module_main
   PRIVATE
     spdlog::module
     Catch2::module
-    Boost::scope::module
+    Boost::scope::module::option
     a)
 target_compile_features(module_main PRIVATE cxx_std_23)
 
@@ -60,3 +60,13 @@ target_sources(single_main
     src/single_main.ixx
 )
 target_compile_features(single_main PRIVATE cxx_std_23)
+
+#option(USE_STD_MODULE "使用標準庫模塊" ON)
+
+add_library(std_module_interface INTERFACE)
+target_compile_definitions(std_module_interface
+  INTERFACE
+    USE_STD_MODULE=$<BOOL:${USE_STD_MODULE}>
+)
+
+add_subdirectory(compat)

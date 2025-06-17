@@ -1,7 +1,13 @@
 ﻿module;
-#include <boost.scope/macro.h>
 #include <catch2/compat.h>
 #include <catch2/macro.h>
+
+#if !USE_BOOST_SCOPE_MODULE
+#  include <boost/scope/defer.hpp>
+#  include <boost/scope/scope_exit.hpp>
+#else
+#  include <boost.scope/defer.hpp>
+#endif
 
 export module main;
 import std;
@@ -9,7 +15,10 @@ import a;
 import catch2;
 import catch2.compat;
 import spdlog;
+
+#if USE_BOOST_SCOPE_MODULE
 import boost.scope;
+#endif
 
 #if !defined(ON) && defined(CATCH_ON)
 #  define ON CATCH_ON
