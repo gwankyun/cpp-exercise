@@ -1,12 +1,16 @@
 ﻿set(CMAKE_FOLDER module)
 
-add_subdirectory(spdlog)
+block()
+  set(CMAKE_FOLDER module/binding)
 
-add_subdirectory(catch2)
+  add_subdirectory(spdlog)
 
-add_subdirectory(boost.scope)
+  add_subdirectory(catch2)
 
-add_subdirectory(dylib)
+  add_subdirectory(boost.scope)
+
+  add_subdirectory(dylib)
+endblock()
 
 add_library(a)
 target_sources(a
@@ -48,8 +52,8 @@ target_sources(module_main
 )
 target_link_libraries(module_main
   PRIVATE
-    spdlog::module
-    Catch2::module
+    spdlog::module::option
+    Catch2::module::option
     Boost::scope::module::option
     a)
 target_compile_features(module_main PRIVATE cxx_std_23)

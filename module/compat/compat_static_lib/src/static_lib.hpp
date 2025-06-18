@@ -1,7 +1,11 @@
 ﻿#pragma once
 #include "static_lib_global.hpp"
 
-EXPORT namespace static_lib
+#if USE_COMPAT_LIB_MODULE
+import std;
+#endif
+
+EXPORT namespace compat_lib
 {
     std::string get_info()
     {

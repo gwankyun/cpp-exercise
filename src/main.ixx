@@ -1,8 +1,8 @@
 ﻿module;
 #include "main_macro.h"
-#include <boost.scope/defer.hpp>
+#include <boost/scope/defer.hpp>
 #include <catch2/macro.h>
-#include <spdlog/compat.h>
+#include <spdlog/spdlog.h>
 
 export module main;
 import std;

@@ -1,29 +1,40 @@
 ﻿module;
-#include <catch2/compat.h>
-#include <catch2/macro.h>
 
-#if !USE_BOOST_SCOPE_MODULE
-#  include <boost/scope/defer.hpp>
-#  include <boost/scope/scope_exit.hpp>
+#if !USE_CATCH2_MODULE
+#  include <catch2/../catch2/catch_session.hpp>
 #else
-#  include <boost.scope/defer.hpp>
+#  include <catch2/macro.h>
 #endif
+// clang-format off
+#include <catch2/catch_test_macros.hpp>
+// clang-format on
+
+#include <boost/scope/defer.hpp>
+#include <spdlog/spdlog.h>
 
 export module main;
 import std;
 import a;
+
+#if USE_CATCH2_MODULE
 import catch2;
 import catch2.compat;
+#endif
+
+#if USE_SPDLOG_MODULE
 import spdlog;
+#endif
 
 #if USE_BOOST_SCOPE_MODULE
 import boost.scope;
 #endif
 
-#if !defined(ON) && defined(CATCH_ON)
-#  define ON CATCH_ON
-#else
-#  error "ON can not define."
+#if USE_CATCH2_MODULE
+#  if !defined(ON) && defined(CATCH_ON)
+#    define ON CATCH_ON
+#  else
+#    error "ON can not define."
+#  endif
 #endif
 
 namespace c = Catch;
@@ -33,6 +44,7 @@ unsigned int Factorial(unsigned int number)
     return number <= 1 ? number : Factorial(number - 1) * number;
 }
 
+#if USE_CATCH2_MODULE
 void factorials_are_computed()
 {
     c::require ON(Factorial(1) == 1);
@@ -40,6 +52,7 @@ void factorials_are_computed()
     c::require ON(Factorial(3) == 6);
     c::require ON(Factorial(10) == 3628800);
 }
+#endif
 
 TEST_CASE("Factorials are computed compatibility", "[factorial]")
 {
@@ -87,6 +100,7 @@ TEST_CASE("vectors can be sized and resized compatibility", "[vector]")
     }
 }
 
+#if USE_CATCH2_MODULE
 void test_add()
 {
     c::require ON(a::add(1, 2) == 3);
@@ -166,10 +180,12 @@ void test_defer()
     }
     c::require ON(n == 2);
 }
+#endif
 
 export int main(int _argc, char* _argv[])
 {
-    spdlog::get().info("module test");
+    SPDLOG_INFO("module test");
+#if USE_CATCH2_MODULE
     using Catch::test_case;
     test_case("a", "[a]", &test_add);
     test_case("vec", "[vector]", &test_vector);
@@ -200,6 +216,7 @@ export int main(int _argc, char* _argv[])
             c::require ON(a::add(1, 2) == 4);
         }
     );
+#endif
 
     auto result = Catch::Session().run(_argc, _argv);
     return result;

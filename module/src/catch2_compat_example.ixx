@@ -1,5 +1,5 @@
 ﻿module;
-#include <catch2/compat.h>
+#include <catch2/catch_test_macros.hpp>
 
 export module catch2_compat_example;
 import std;

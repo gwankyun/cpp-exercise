@@ -1,6 +1,6 @@
 ﻿#include <string>
 
-namespace static_lib
+namespace compat_lib
 {
     std::string get_info();
-} // namespace static_lib
+} // namespace compat_lib
