@@ -12,12 +12,20 @@
 #include <boost/scope/defer.hpp>
 #include <spdlog/spdlog.h>
 
+#if !USE_BOOST_INTRUSIVE_MODULE
+#  include <boost/intrusive/list.hpp>
+#endif
+
+#if !USE_BOOST_CORE_MODULE
+#  include <boost/core/ignore_unused.hpp>
+#endif
+
 export module main;
 import std;
 import a;
 
 #if USE_CATCH2_MODULE
-import catch2;
+import catch2.modern;
 import catch2.compat;
 #endif
 
@@ -29,6 +37,14 @@ import spdlog;
 import boost.scope;
 #endif
 
+#if USE_BOOST_CORE_MODULE
+import boost.core;
+#endif
+
+#if USE_BOOST_INTRUSIVE_MODULE
+import boost.intrusive;
+#endif
+
 #if USE_CATCH2_MODULE
 #  if !defined(ON) && defined(CATCH_ON)
 #    define ON CATCH_ON
@@ -38,6 +54,22 @@ import boost.scope;
 #endif
 
 namespace c = Catch;
+namespace intrusive = boost::intrusive;
+
+class MyClass : public intrusive::list_base_hook<intrusive::link_mode<intrusive::safe_link>>
+{
+  public:
+    MyClass(int value) : value_(value)
+    {
+    }
+    int getValue() const
+    {
+        return value_;
+    }
+
+  private:
+    int value_;
+};
 
 unsigned int Factorial(unsigned int number)
 {
@@ -98,6 +130,19 @@ TEST_CASE("vectors can be sized and resized compatibility", "[vector]")
         REQUIRE(v.size() == 5);
         REQUIRE(v.capacity() >= 5);
     }
+}
+
+TEST_CASE("intrusive", "[boost]")
+{
+    boost::intrusive::list<MyClass> myList;
+    MyClass obj1(1);
+    MyClass obj2(2);
+    MyClass obj3(3);
+
+    myList.push_back(obj1);
+    myList.push_back(obj2);
+    myList.push_back(obj3);
+    REQUIRE(myList.size() == 3);
 }
 
 #if USE_CATCH2_MODULE
@@ -184,6 +229,8 @@ void test_defer()
 
 export int main(int _argc, char* _argv[])
 {
+    int ununsed = 0;
+    boost::ignore_unused(ununsed);
     SPDLOG_INFO("module test");
 #if USE_CATCH2_MODULE
     using Catch::test_case;

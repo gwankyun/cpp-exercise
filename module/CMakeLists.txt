@@ -9,6 +9,10 @@ block()
 
   add_subdirectory(boost.scope)
 
+  add_subdirectory(boost.core)
+
+  add_subdirectory(boost.intrusive)
+
   add_subdirectory(dylib)
 endblock()
 
@@ -55,7 +59,10 @@ target_link_libraries(module_main
     spdlog::module::option
     Catch2::module::option
     Boost::scope::module::option
-    a)
+    Boost::core::module::option
+    Boost::intrusive::module::option
+    a
+)
 target_compile_features(module_main PRIVATE cxx_std_23)
 
 add_executable(single_main)

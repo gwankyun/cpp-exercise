@@ -35,6 +35,10 @@ find_package(boost_scope REQUIRED CONFIG)
 
 find_package(boost_config REQUIRED CONFIG)
 
+find_package(boost_core REQUIRED CONFIG)
+
+find_package(boost_intrusive REQUIRED CONFIG)
+
 find_package(proxy CONFIG)
 
 find_package(Catch2 CONFIG REQUIRED)
