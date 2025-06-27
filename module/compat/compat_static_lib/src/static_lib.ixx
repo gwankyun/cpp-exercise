@@ -1,6 +1,6 @@
 ﻿module;
-#include "static_lib_global.hpp"
+#include "static_lib_decl.hpp"
 
 export module compat_lib;
 
-#include "static_lib.hpp"
+#include "static_lib_impl.hpp"

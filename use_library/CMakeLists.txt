@@ -19,11 +19,14 @@ target_compile_features(shared_lib PRIVATE cxx_std_20)
 
 # 生成靜態庫
 add_library(static_lib STATIC)
-target_sources(static_lib PRIVATE
-  src/static_lib.cpp
-  include/static_lib.h
-)
-target_compile_features(static_lib PRIVATE cxx_std_20)
+block()
+  set(lib static_lib)
+  target_sources(${lib} PRIVATE
+    src/static_lib.cpp
+    include/static_lib.h
+  )
+  target_compile_features(${lib} PRIVATE cxx_std_20)
+endblock()
 
 # 生成模塊庫
 add_library(module_lib MODULE)
@@ -36,13 +39,21 @@ target_compile_features(module_lib PRIVATE cxx_std_20)
 
 # 調用庫
 add_executable(shared_lib_test)
-target_sources(shared_lib_test
-  PRIVATE
-    include/shared_lib.h
-    shared_lib_test.py
-  PRIVATE FILE_SET CXX_MODULES FILES
-    src/shared_lib_test.ixx
-)
-target_link_libraries(shared_lib_test PRIVATE
-  spdlog::module Catch2::module dylib::module shared_lib static_lib)
-target_compile_features(shared_lib_test PRIVATE cxx_std_23)
+block()
+  set(lib shared_lib_test)
+  target_sources(${lib}
+    PRIVATE
+      include/shared_lib.h
+      shared_lib_test.py
+    PRIVATE FILE_SET CXX_MODULES FILES
+      src/shared_lib_test.ixx
+  )
+  target_link_libraries(${lib}
+    PRIVATE
+      spdlog::module
+      Catch2::module
+      dylib::module
+      shared_lib static_lib
+  )
+  target_compile_features(${lib} PRIVATE cxx_std_23)
+endblock()
